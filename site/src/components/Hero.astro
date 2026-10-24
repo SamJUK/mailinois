@@ -1,0 +1,89 @@
+---
+import { LinkButton } from '@astrojs/starlight/components';
+import logo from '../assets/logo.svg';
+import { withBase } from '../lib/url';
+
+const { data } = Astro.locals.starlightRoute.entry;
+const { title = data.title, tagline, actions = [] } = data.hero ?? {};
+---
+
+<div class="hero">
+	<img src={logo.src} width="240" height="240" alt="" class="logo" />
+	<div class="copy">
+		<h1 id="_top" data-page-title>{title}</h1>
+		{tagline && <p class="pitch" set:html={tagline} />}
+		{data.description && <p class="lede">{data.description}</p>}
+		{
+			actions.length > 0 && (
+				<div class="actions">
+					{actions.map(({ link, text, variant, icon }) => (
+						<LinkButton href={withBase(link)} variant={variant} icon={icon?.name}>
+							{text}
+						</LinkButton>
+					))}
+				</div>
+			)
+		}
+	</div>
+</div>
+
+<style>
+	.hero {
+		display: grid;
+		gap: 2rem;
+		padding-block: 2rem 1rem;
+	}
+
+	.logo {
+		width: min(40%, 10rem);
+		height: auto;
+	}
+
+	.copy {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		max-width: 40rem;
+	}
+
+	h1 {
+		font-size: clamp(var(--sl-text-4xl), calc(1rem + 5vw), var(--sl-text-6xl));
+		line-height: 1;
+		font-weight: 650;
+		color: var(--sl-color-white);
+	}
+
+	.pitch {
+		font-size: clamp(var(--sl-text-xl), calc(0.5rem + 2vw), var(--sl-text-3xl));
+		line-height: var(--sl-line-height-headings);
+		font-weight: 500;
+		color: var(--sl-color-white);
+		text-wrap: balance;
+	}
+
+	.lede {
+		font-size: var(--sl-text-lg);
+		color: var(--mn-muted);
+		max-width: 36rem;
+	}
+
+	.actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1rem 1.5rem;
+		margin-top: 0.5rem;
+	}
+
+	@media (min-width: 50rem) {
+		.hero {
+			grid-template-columns: 1fr auto;
+			align-items: center;
+			padding-block: clamp(3rem, calc(1rem + 8vmin), 7rem) 2rem;
+		}
+
+		.logo {
+			order: 2;
+			width: 15rem;
+		}
+	}
+</style>

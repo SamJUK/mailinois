@@ -1,0 +1,44 @@
+# Mailinois's server. The binary in /usr/local/bin, the config in /etc/mailinois/mailinois.yaml, and secrets
+# (MAILINOIS_PASSWORD, webhook URLs for ${NAMES} in the config) in /etc/mailinois/mailinois.env, mode 600.
+# SQLite lives in /var/lib/mailinois: a relative database.url such as the default sqlite:mailinois.db lands there.
+#
+#   sudo install -m 644 mailinois.service /etc/systemd/system/
+#   sudo systemctl enable --now mailinois
+
+[Unit]
+Description=Mailinois, Postfix observability
+Documentation=https://github.com/SamJUK/mailinois
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/mailinois serve -config /etc/mailinois/mailinois.yaml
+EnvironmentFile=-/etc/mailinois/mailinois.env
+DynamicUser=yes
+StateDirectory=mailinois
+WorkingDirectory=/var/lib/mailinois
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

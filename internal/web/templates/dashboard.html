@@ -1,0 +1,103 @@
+{{define "content"}}{{with .Data}}
+<section class="kpis panel" aria-label="Totals">
+  <a href="{{$.Link "/messages"}}"><span class="label">Received</span><strong>{{num .Received}}</strong><em>messages accepted</em></a>
+  <a href="{{$.Link "/messages" "q" "status:sent"}}"><span class="label">Delivered</span><strong class="t-sent">{{pct (rate .Sent .Finals)}}</strong><em>{{num .Sent}} recipients</em></a>
+  <a href="{{$.Link "/queue"}}"><span class="label">Deferrals</span><strong class="t-deferred">{{num .Deferrals}}</strong><em>retried by Postfix</em></a>
+  <a href="{{$.Link "/messages" "q" "status:bounced,expired"}}"><span class="label">Bounced</span><strong class="t-bounced">{{num (add .Bounced .Expired)}}</strong><em>{{pct (rate (add .Bounced .Expired) .Finals)}}{{if .Expired}} · {{.Expired}} expired{{end}}</em></a>
+  <a href="{{$.Link "/messages" "q" "status:rejected"}}"><span class="label">Rejected</span><strong class="t-rejected">{{num .Rejected}}</strong><em>refused at SMTP</em></a>
+  <a href="{{$.Link "/queue"}}"><span class="label">In queue</span><strong>{{num .Queue}}</strong><em>{{if .Oldest}}oldest {{age .Oldest}}{{else}}empty{{end}}</em></a>
+  <div><span class="label">Delivery time</span><strong>{{secs .P50}}</strong><em>median · p95 {{secs .P95}}</em></div>
+</section>
+
+<div class="split">
+  <div class="split-main">
+    <section class="panel" aria-label="Outcomes">
+      <div class="panel-head">
+        <h2>Outcomes</h2>
+        <ul class="legend"><li class="sent">sent</li><li class="deferred">deferred</li><li class="bounced">bounced</li><li class="rejected">rejected</li></ul>
+      </div>
+      {{with .Chart}}
+      {{if .Max}}
+      <svg class="chart" viewBox="0 -14 {{.W}} {{addf .H 38}}" role="img" aria-label="Delivery outcomes over the period">
+        <line class="axis" x1="0" x2="{{.W}}" y1="{{.H}}" y2="{{.H}}"></line>
+        <line class="grid" x1="0" x2="{{.W}}" y1="0" y2="0"></line>
+        <text class="max" x="0" y="-4">{{num .Max}}</text>
+        {{range .Bars}}{{$bar := .}}<g><title>{{.Title}}</title><rect class="hit" x="{{.X}}" y="0" width="{{.W}}" height="{{$.Data.Chart.H}}"></rect>{{range .Segs}}<rect class="{{.Class}}" x="{{$bar.X}}" y="{{.Y}}" width="{{$bar.W}}" height="{{.H}}"></rect>{{end}}</g>{{end}}
+        {{range .Labels}}<text x="{{.X}}" y="{{addf $.Data.Chart.H 18}}">{{.Text}}</text>{{end}}
+      </svg>
+      {{else}}
+      <p class="empty">No delivery attempts in this period yet. Lines arrive over syslog: see the docs for the rsyslog snippet.</p>
+      {{end}}
+      {{end}}
+    </section>
+
+    <section class="panel flush" aria-label="Recent failures">
+  <div class="panel-head"><h2>Recent failures</h2><a href="{{$.Link "/queue"}}">Queue and failures →</a></div>
+  {{template "failures" .Failures}}
+</section>
+
+    <section class="panel flush" aria-label="Why mail was deferred">
+      <div class="panel-head"><h2>Why mail was deferred</h2><a href="{{$.Link "/queue"}}">Queue →</a></div>
+      {{if .Reasons}}
+      <div class="scroll">
+      <table>
+        <thead><tr><th>Provider</th><th>Code</th><th class="num">Count</th><th class="response">Latest response</th></tr></thead>
+        <tbody>
+        {{range .Reasons}}
+        <tr>
+          <td class="nowrap"><a href="{{$.Link "/messages" "q" (printf "provider:%s dsn:%s" .Provider .DSN)}}">{{provider .Provider}}</a></td>
+          <td><code class="t-deferred">{{or .DSN "–"}}</code></td>
+          <td class="num">{{num .Count}}</td>
+          <td class="response">{{.Example}}</td>
+        </tr>
+        {{end}}
+        </tbody>
+      </table>
+      </div>
+      {{else}}
+      <p class="empty">No deferrals in this period.</p>
+      {{end}}
+    </section>
+  </div>
+
+  <aside class="split-side">
+    <section class="panel flush" aria-label="Live tail">
+      <div class="panel-head"><h2><i class="pulse"></i>Live tail</h2><button class="small" type="button" data-pause>Pause</button></div>
+      <ol class="tail" id="tail" data-src="{{.TailURL}}">
+        {{range .Tail}}
+        <li data-id="{{.ID}}"><span class="mono when">{{clock .At}}</span><i class="dot s-{{.Status}}"></i><a href="/messages/{{.MessageID}}"><span class="to">{{or .Recipient "(no recipient)"}}</span><span class="mono what">{{.Server}} · {{.Status}}{{with .DSN}} {{.}}{{end}}</span></a></li>
+        {{else}}
+        <li class="empty">Waiting for the first delivery…</li>
+        {{end}}
+      </ol>
+    </section>
+
+    {{if .IPs}}
+    <section class="panel" aria-label="Blocklists">
+      <div class="panel-head"><h2>Blocklists</h2><a href="{{$.Link "/servers"}}">Servers →</a></div>
+      {{range .IPs}}
+      <div class="ipline">
+        <span class="mono">{{.IP}}<small>{{or .PTR "no PTR"}}</small></span>
+        <span class="zonebar">{{range .Checks}}<i class="z-{{.Status}}" title="{{.Zone}}: {{.Status}}"></i>{{else}}<small>not checked yet</small>{{end}}</span>
+      </div>
+      {{end}}
+    </section>
+    {{end}}
+
+    <section class="panel" aria-label="Sending domains">
+      <div class="panel-head"><h2>Sending domains</h2><a href="{{$.Link "/domains"}}">Domains →</a></div>
+      <div class="domain-preview">
+      {{range .Domains}}
+      <div class="domline">
+        <a href="{{$.Link "/domains"}}#{{.Domain}}">{{.Domain}}</a>
+        <span>{{range .Kinds}}<span class="mono t-{{severity .Status}}" title="{{.Summary}}">{{.Kind}}</span> {{end}}</span>
+      </div>
+      {{else}}
+      <p class="empty">No DNS checks yet. They run at start and every {{dur $.Data.CheckEvery}}.</p>
+      {{end}}
+      </div>
+    </section>
+  </aside>
+</div>
+
+{{end}}{{end}}

@@ -1,0 +1,180 @@
+# Postfix (boky/postfix) with the Mailinois agent beside it in the same pod. Postfix's rsyslog forwards to the agent
+# and Postfix hands each message to the agent's capture milter, both over the pod's loopback. The agent ships to
+# Mailinois over HTTP with a token and keeps a spool while Mailinois is away. Postfix never waits on any of it:
+# the agent's milter is set to default_action=accept.
+#
+#   mailinois token          # prints a token and its hash; the hash goes in Mailinois's auth.tokens, scope ingest
+#   kubectl -n mailinois create secret generic mailinois-agent --from-literal=token='<the token>'
+#   kubectl -n mailinois apply -f deploy/kubernetes/postfix-with-agent.yaml
+#
+# Set ALLOWED_SENDER_DOMAINS, POSTFIX_myhostname and POSTFIX_mynetworks for your own mail first.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postfix-rsyslog
+  labels:
+    app.kubernetes.io/name: postfix
+data:
+  # deploy/rsyslog/mailinois.conf, pointed at the agent on the pod's loopback.
+  mailinois.conf: |
+    if ($programname startswith "postfix" or $programname == "opendkim") then {
+        action(
+            type="omfwd" target="127.0.0.1" port="5514" protocol="tcp"
+            template="RSYSLOG_ForwardFormat" TCP_Framing="octet-counted"
+            queue.type="LinkedList" queue.size="10000" queue.timeoutEnqueue="0"
+            action.resumeRetryCount="-1" action.resumeInterval="10"
+        )
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postfix
+  labels:
+    app.kubernetes.io/name: postfix
+spec:
+  selector:
+    app.kubernetes.io/name: postfix
+  ports:
+    - name: smtp
+      port: 587
+      targetPort: smtp
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postfix
+  labels:
+    app.kubernetes.io/name: postfix
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postfix
+  labels:
+    app.kubernetes.io/name: postfix
+spec:
+  replicas: 1
+  # Recreate: one pod holds the volume, and the queue on it.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postfix
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postfix
+    spec:
+      # The server's name in Mailinois: rsyslog stamps each line with the pod's hostname, which is otherwise the pod's
+      # name and new on every restart.
+      hostname: postfix
+      # Kubernetes would add POSTFIX_SERVICE_HOST and the like for the Service above, and boky/postfix writes every
+      # POSTFIX_* variable into main.cf.
+      enableServiceLinks: false
+      # The runtime's default syscall filter, for Postfix as well as the agent.
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postfix
+          image: boky/postfix:5.1.0@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef # pinned: tags move
+          env:
+            - name: ALLOWED_SENDER_DOMAINS
+              value: example.com
+            - name: POSTFIX_myhostname
+              value: mail.example.com
+            # Who may send through it: your pod network.
+            - name: POSTFIX_mynetworks
+              value: "127.0.0.0/8, 10.0.0.0/8"
+            # Keys made once onto the volume; the public half goes in DNS.
+            - name: DKIM_AUTOGENERATE
+              value: "true"
+            - name: DKIM_SELECTOR
+              value: mail
+            # OpenDKIM (the image's, localhost:8891) first, then the agent's milter, so captures carry the signature.
+            # The agent's milter has its own default_action: if it is down or slow, Postfix accepts the mail anyway,
+            # whatever the global milter_default_action says.
+            - name: POSTFIX_smtpd_milters
+              value: "inet:localhost:8891, { inet:127.0.0.1:8892, default_action=accept }"
+            - name: POSTFIX_non_smtpd_milters
+              value: "inet:localhost:8891, { inet:127.0.0.1:8892, default_action=accept }"
+            - name: POSTFIX_milter_command_timeout
+              value: 5s
+            - name: POSTFIX_milter_content_timeout
+              value: 15s
+          ports:
+            - name: smtp
+              containerPort: 587
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: rsyslog
+              mountPath: /etc/rsyslog.d/mailinois.conf
+              subPath: mailinois.conf
+              readOnly: true
+            - name: postfix
+              mountPath: /var/spool/postfix
+              subPath: spool
+            - name: postfix
+              mountPath: /etc/opendkim/keys
+              subPath: dkim
+        - name: mailinois-agent
+          image: ghcr.io/samjuk/mailinois:v0.1.0
+          # Mailinois in another namespace: http://mailinois.<namespace>.svc:7480.
+          args:
+            - agent
+            - -server
+            - http://mailinois:7480
+            - -token-file
+            - /run/secrets/mailinois-agent/token
+            - -syslog
+            - 127.0.0.1:5514
+            - -milter
+            - 127.0.0.1:8892
+            - -capture
+            - headers
+            - -spool
+            - /var/lib/mailinois-agent
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: agent-token
+              mountPath: /run/secrets/mailinois-agent
+              readOnly: true
+            # Batches wait here while Mailinois is unreachable. It outlives container restarts, not the pod.
+            - name: spool
+              mountPath: /var/lib/mailinois-agent
+      volumes:
+        - name: rsyslog
+          configMap:
+            name: postfix-rsyslog
+        - name: postfix
+          persistentVolumeClaim:
+            claimName: postfix
+        - name: agent-token
+          secret:
+            secretName: mailinois-agent
+        - name: spool
+          emptyDir: {}

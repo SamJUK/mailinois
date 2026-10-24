@@ -1,0 +1,48 @@
+# The Mailinois agent, on a Postfix host that can't reach Mailinois's syslog port: it follows the mail log (or
+# takes syslog locally, or runs the capture milter) and ships it over HTTPS, spooling to /var/lib/mailinois-agent
+# while the server is away. Settings in /etc/mailinois/agent.env, mode 600:
+#
+#   MAILINOIS_SERVER=https://mailinois.example.com
+#   MAILINOIS_TOKEN=mlns_...                       # a token with the ingest scope
+#   MAILINOIS_AGENT_ARGS=-file /var/log/mail.log   # or -syslog 127.0.0.1:5514, -milter 127.0.0.1:8892
+#
+# Debian and Ubuntu let the adm group read /var/log/mail.log. Elsewhere (RHEL's /var/log/maillog is root's),
+# override SupplementaryGroups, or point the agent at Postfix's own maillog_file.
+
+[Unit]
+Description=Mailinois agent, ships Postfix's log to Mailinois
+Documentation=https://github.com/SamJUK/mailinois
+Wants=network-online.target
+After=network-online.target postfix.service
+
+[Service]
+EnvironmentFile=/etc/mailinois/agent.env
+ExecStart=/usr/local/bin/mailinois agent $MAILINOIS_AGENT_ARGS
+DynamicUser=yes
+SupplementaryGroups=adm
+StateDirectory=mailinois-agent
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

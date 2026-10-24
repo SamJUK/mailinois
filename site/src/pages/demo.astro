@@ -1,0 +1,55 @@
+---
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
+import '../../../internal/web/static/app.css';
+import '../demo/demo.css';
+import logo from '../assets/logo.svg';
+import { withBase } from '../lib/url';
+import { labels } from '../demo/views';
+import { sites, servers } from '../demo/model';
+---
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="Explore Mailinois in your browser with made-up Postfix traffic. Search messages, follow delivery timelines and inspect the queue, domains and alerts." />
+		<title>Interactive demo · Mailinois</title>
+		<link rel="icon" href={logo.src} type="image/svg+xml" />
+	</head>
+	<body>
+		<a class="skip-link" href="#demo-main">Skip to content</a>
+		<div class="demo-banner">
+			<div><strong>Interactive demo</strong><span>Simulated data, entirely in your browser. No mail is sent.</span></div>
+			<div class="demo-controls">
+				<label for="scenario">Simulate</label>
+				<select id="scenario"><option value="throttling">Microsoft throttling</option><option value="healthy">Healthy traffic</option><option value="dns">Broken DNS</option></select>
+				<button class="small" type="button" id="simulation-toggle" aria-pressed="false">Pause simulation</button>
+				<button class="small" type="button" id="simulation-reset">Reset demo</button>
+				<a href={withBase('/')}>Back to the site ↗</a>
+			</div>
+		</div>
+		<header class="top">
+			<a class="brand" href="#/" aria-label="Mailinois demo overview"><img src={logo.src} alt="" width="30" height="30" /><span>Mailinois</span></a>
+			<form class="search" id="demo-search" role="search">
+				<svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+				<input id="search" type="search" name="q" placeholder="Search: provider:microsoft status:deferred" aria-label="Search messages" autocomplete="off" />
+				<kbd>⌘K</kbd>
+			</form>
+			<div class="top-right"><span class="live"><i class="on" id="simulation-light"></i><span id="simulation-status">Simulation running</span></span><button class="icon" type="button" id="theme-toggle" aria-label="Switch to light theme"><svg aria-hidden="true" viewBox="0 0 24 24"><path class="moon" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /><path class="sun" d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M5.6 18.4l-1.4 1.4M19.8 4.2l-1.4 1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" /></svg></button></div>
+		</header>
+		<nav class="tabs" aria-label="Sections">
+			{Object.entries(labels).map(([view, title]) => <a href={`#/${view === 'overview' ? '' : view}`} data-view={view}>{title}{view === 'queue' && <span class="count" id="queue-count"></span>}</a>)}
+			<div class="pickers">
+				<label class="sr-only" for="site-filter">Site</label><select id="site-filter"><option value="">All sites</option>{sites.map((site) => <option value={site.id}>{site.name}</option>)}</select>
+				<label class="sr-only" for="server-filter">Server</label><select id="server-filter"><option value="">All servers</option>{servers.map((server) => <option>{server.name}</option>)}</select>
+				<div class="seg" id="period-picker" role="group" aria-label="Period">{['1h', '24h', '7d', '30d'].map((period) => <a href={`#/?period=${period}`} data-period={period}>{period}</a>)}</div>
+			</div>
+		</nav>
+		<div class="demo-start"><span>Try an investigation:</span><a href="#/messages/1">Why is this order email delayed?</a><a href="#/messages/2?tab=body">Open a captured message →</a></div>
+		<main id="demo-main" tabindex="-1"><p class="lede">Loading the simulated mailbox…</p><noscript><p>This interactive demo needs JavaScript. You can still <a href={withBase('/example-report.html')}>read the example report</a> without running the app.</p></noscript></main>
+		<p class="sr-only" role="status" id="demo-announcement"></p>
+		<footer>Mailinois browser demo · All traffic, addresses and DNS results are made up. <a href={withBase('/docs/quick-start/')}>Run Mailinois yourself</a> · <a href={withBase('/example-report.html')}>Example report</a></footer>
+		<script>import '../demo/app';</script>
+	</body>
+</html>

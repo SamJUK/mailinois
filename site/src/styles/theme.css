@@ -1,0 +1,80 @@
+/* Night Shift: the app's palette, mapped onto Starlight's custom properties. Dark is the default. */
+:root {
+	--sl-font: 'Geist Variable';
+	--sl-font-mono: 'Geist Mono Variable';
+
+	--sl-color-white: #f5f7fa;
+	--sl-color-gray-1: #e7ebf0;
+	--sl-color-gray-2: #c5ccd6;
+	--sl-color-gray-3: #8d97a5;
+	--sl-color-gray-4: #4a535f;
+	--sl-color-gray-5: #242a32;
+	--sl-color-gray-6: #111418;
+	--sl-color-black: #0a0c0f;
+
+	--sl-color-accent-low: #1a2306;
+	--sl-color-accent: #c3f53c;
+	--sl-color-accent-high: #c3f53c;
+
+	--sl-color-text: var(--sl-color-gray-1);
+	--sl-color-text-accent: var(--sl-color-accent);
+	--sl-color-bg-inline-code: #181c22;
+	--sl-color-hairline: var(--sl-color-gray-5);
+	--sl-color-hairline-light: var(--sl-color-gray-5);
+	--sl-color-hairline-shade: var(--sl-color-black);
+	--sl-color-backdrop-overlay: rgb(10 12 15 / 0.75);
+
+	--mn-panel: var(--sl-color-gray-6);
+	--mn-line: var(--sl-color-gray-5);
+	--mn-muted: var(--sl-color-gray-3);
+	--mn-accent: var(--sl-color-text-accent);
+	--mn-accent-soft: rgb(195 245 60 / 0.1);
+}
+
+:root[data-theme='light'] {
+	--sl-color-white: #0a0c0f;
+	--sl-color-gray-1: #15191e;
+	--sl-color-gray-2: #2b323b;
+	--sl-color-gray-3: #5a6472;
+	--sl-color-gray-4: #8d97a5;
+	--sl-color-gray-5: #d5dbe2;
+	--sl-color-gray-6: #edf0f3;
+	--sl-color-gray-7: #f6f7f9;
+	--sl-color-black: #ffffff;
+
+	--sl-color-accent-low: #e6f2cc;
+	--sl-color-accent: #3f6b06;
+	--sl-color-accent-high: #2c4c03;
+
+	--sl-color-text: var(--sl-color-gray-2);
+	--sl-color-text-accent: var(--sl-color-accent);
+	--sl-color-bg-inline-code: var(--sl-color-gray-6);
+	--sl-color-hairline: var(--sl-color-gray-5);
+	--sl-color-hairline-light: var(--sl-color-gray-6);
+	--sl-color-hairline-shade: var(--sl-color-gray-6);
+	--sl-color-backdrop-overlay: rgb(43 50 59 / 0.6);
+
+	--mn-panel: var(--sl-color-gray-7);
+	--mn-accent-soft: rgb(63 107 6 / 0.08);
+}
+
+::selection {
+	background-color: var(--sl-color-accent);
+	color: var(--sl-color-black);
+}
+
+h1,
+h2,
+h3,
+.site-title {
+	letter-spacing: -0.02em;
+}
+
+.sl-markdown-content table {
+	font-size: var(--sl-text-sm);
+}
+
+/* The landing page's dashboard screenshot. */
+.shot { margin: 2.5rem 0; }
+.shot img { display: block; width: 100%; height: auto; border: 1px solid var(--sl-color-gray-5); border-radius: 10px; }
+.shot figcaption { margin-top: 0.6rem; color: var(--sl-color-gray-3); font-size: var(--sl-text-sm); }

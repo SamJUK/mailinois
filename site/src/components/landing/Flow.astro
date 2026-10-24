@@ -1,0 +1,182 @@
+---
+const summary =
+	'Your apps hand mail to Postfix over SMTP and Postfix delivers it to the internet. rsyslog forwards Postfix’s log lines to Mailinois over TCP, and the optional milter hands it a copy of each message. Postfix servers on other networks run the agent, which ships over HTTPS. Mailinois keeps its data in SQLite or PostgreSQL and serves the dashboard, REST API, metrics and webhooks.';
+---
+
+<figure class="flow not-content">
+	<svg class="wide" viewBox="0 0 880 420" aria-hidden="true">
+		<defs>
+			<marker id="arrow-wide" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+				<path d="M0 0 10 5 0 10z" class="head"></path>
+			</marker>
+		</defs>
+
+		<g class="edges" marker-end="url(#arrow-wide)">
+			<path d="M216 56H338"></path>
+			<path d="M540 56H662"></path>
+			<path d="M410 88V246"></path>
+			<path d="M470 88V246" class="optional"></path>
+			<path d="M216 284H338"></path>
+			<path d="M540 284H662"></path>
+			<path d="M440 320V354"></path>
+		</g>
+
+		<g class="labels">
+			<text x="277" y="46" text-anchor="middle">SMTP</text>
+			<text x="601" y="46" text-anchor="middle">SMTP</text>
+			<text x="400" y="160" text-anchor="end">rsyslog</text>
+			<text x="400" y="178" text-anchor="end">TCP 5514</text>
+			<text x="480" y="160">milter</text>
+			<text x="480" y="178">optional</text>
+			<text x="277" y="274" text-anchor="middle">HTTPS</text>
+		</g>
+
+		<g class="node"><rect x="16" y="24" width="200" height="64" rx="8"></rect><text x="116" y="51" class="title">Your apps</text><text x="116" y="72" class="sub">shops, CRMs, cron jobs</text></g>
+		<g class="node"><rect x="340" y="24" width="200" height="64" rx="8"></rect><text x="440" y="51" class="title">Postfix</text><text x="440" y="72" class="sub">accepts, queues, delivers</text></g>
+		<g class="node"><rect x="664" y="24" width="200" height="64" rx="8"></rect><text x="764" y="51" class="title">The internet</text><text x="764" y="72" class="sub">Gmail, Outlook, Yahoo…</text></g>
+		<g class="node"><rect x="16" y="248" width="200" height="72" rx="8"></rect><text x="116" y="279" class="title">Postfix elsewhere</text><text x="116" y="301" class="sub">runs the agent</text></g>
+		<g class="node core"><rect x="340" y="248" width="200" height="72" rx="8"></rect><text x="440" y="279" class="title">Mailinois</text><text x="440" y="301" class="sub">follows each queue ID</text></g>
+		<g class="node"><rect x="664" y="248" width="200" height="72" rx="8"></rect><text x="764" y="279" class="title">Dashboard, REST API</text><text x="764" y="301" class="sub">/metrics, webhooks</text></g>
+		<g class="node"><rect x="365" y="356" width="150" height="48" rx="8"></rect><text x="440" y="385" class="sub">SQLite or PostgreSQL</text></g>
+	</svg>
+
+	<svg class="narrow" viewBox="0 0 360 488" aria-hidden="true">
+		<defs>
+			<marker id="arrow-narrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+				<path d="M0 0 10 5 0 10z" class="head"></path>
+			</marker>
+		</defs>
+
+		<g class="edges" marker-end="url(#arrow-narrow)">
+			<path d="M106 72V126"></path>
+			<path d="M196 156H230"></path>
+			<path d="M60 184V286"></path>
+			<path d="M90 184V286" class="optional"></path>
+			<path d="M232 320H198"></path>
+			<path d="M106 352V398"></path>
+			<path d="M176 352V376H288V398"></path>
+		</g>
+
+		<g class="labels">
+			<text x="114" y="104">SMTP</text>
+			<path d="M108 224h18" class="swatch"></path>
+			<text x="134" y="228">rsyslog, TCP 5514</text>
+			<path d="M108 248h18" class="swatch optional"></path>
+			<text x="134" y="252">milter, optional</text>
+		</g>
+
+		<g class="node"><rect x="16" y="16" width="180" height="56" rx="8"></rect><text x="106" y="40" class="title">Your apps</text><text x="106" y="59" class="sub">shops, CRMs, cron</text></g>
+		<g class="node"><rect x="16" y="128" width="180" height="56" rx="8"></rect><text x="106" y="152" class="title">Postfix</text><text x="106" y="171" class="sub">accepts, delivers</text></g>
+		<g class="node"><rect x="232" y="128" width="112" height="56" rx="8"></rect><text x="288" y="152" class="title">Internet</text><text x="288" y="171" class="sub">Gmail, Outlook</text></g>
+		<g class="node core"><rect x="16" y="288" width="180" height="64" rx="8"></rect><text x="106" y="315" class="title">Mailinois</text><text x="106" y="335" class="sub">follows each queue ID</text></g>
+		<g class="node"><rect x="232" y="288" width="112" height="64" rx="8"></rect><text x="288" y="315" class="title">Elsewhere</text><text x="288" y="335" class="sub">agent, HTTPS</text></g>
+		<g class="node"><rect x="16" y="400" width="180" height="56" rx="8"></rect><text x="106" y="424" class="title">Database</text><text x="106" y="443" class="sub">SQLite or PostgreSQL</text></g>
+		<g class="node"><rect x="232" y="400" width="112" height="72" rx="8"></rect><text x="288" y="424" class="title">Dashboard</text><text x="288" y="443" class="sub">API, /metrics</text><text x="288" y="460" class="sub">webhooks</text></g>
+	</svg>
+
+	<figcaption>{summary}</figcaption>
+</figure>
+
+<style>
+	.flow {
+		margin: 0;
+		padding: 1.5rem;
+		background: var(--mn-panel);
+		border: 1px solid var(--mn-line);
+		border-radius: 0.5rem;
+	}
+
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		margin-inline: auto;
+	}
+
+	.wide {
+		max-width: 55rem;
+	}
+
+	.narrow {
+		display: none;
+		max-width: 24rem;
+	}
+
+	@media (max-width: 40rem) {
+		.flow {
+			padding: 1rem;
+		}
+		.wide {
+			display: none;
+		}
+		.narrow {
+			display: block;
+		}
+	}
+
+	.edges path,
+	.swatch {
+		fill: none;
+		stroke: var(--mn-muted);
+		stroke-width: 1.5;
+	}
+
+	.optional {
+		stroke-dasharray: 5 4;
+	}
+
+	.head {
+		fill: var(--mn-muted);
+	}
+
+	text {
+		font-family: var(--__sl-font);
+		fill: var(--sl-color-white);
+	}
+
+	.labels text {
+		font-family: var(--__sl-font-mono);
+		font-size: 12px;
+		fill: var(--mn-muted);
+	}
+
+	.node rect {
+		fill: var(--sl-color-bg);
+		stroke: var(--mn-line);
+		stroke-width: 1.5;
+	}
+
+	.node text {
+		text-anchor: middle;
+	}
+
+	.title {
+		font-size: 15px;
+		font-weight: 600;
+	}
+
+	.sub {
+		font-size: 12.5px;
+		fill: var(--mn-muted);
+	}
+
+	.narrow .title {
+		font-size: 14px;
+	}
+
+	.core rect {
+		stroke: var(--mn-accent);
+		stroke-width: 2;
+	}
+
+	.core .title {
+		fill: var(--mn-accent);
+	}
+
+	figcaption {
+		margin-top: 1.25rem;
+		font-size: var(--sl-text-sm);
+		color: var(--mn-muted);
+		max-width: 48rem;
+	}
+</style>

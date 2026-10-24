@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}} · Mailinois</title>
+<link rel="icon" href="{{asset "logo.svg"}}" type="image/svg+xml">
+<script src="{{asset "app.js"}}"></script>
+<link rel="stylesheet" href="{{asset "app.css"}}">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="{{.Link "/"}}"><img src="{{asset "logo.svg"}}" alt="" width="30" height="30"><span>Mailinois</span></a>
+  <form class="search" action="/messages" method="get" role="search">
+    <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+    <input id="search" type="search" name="q" value="{{.Q}}" placeholder="Search: from:store-a.example status:deferred dsn:4.7" aria-label="Search messages" autocomplete="off">
+    {{range $k, $v := .Query}}{{if ne $k "q"}}<input type="hidden" name="{{$k}}" value="{{index $v 0}}">{{end}}{{end}}
+    <kbd>⌘K</kbd>
+  </form>
+  <div class="top-right">
+    <span class="live" title="Servers that sent a line in the last 15 minutes"><i class="{{if .Live}}on{{end}}"></i>{{.Live}} live</span>
+    <button class="icon" type="button" data-toggle="theme" aria-label="Switch between dark and light"><svg aria-hidden="true" viewBox="0 0 24 24"><path class="moon" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path><path class="sun" d="M12 4V2M12 22v-2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M5.6 18.4l-1.4 1.4M19.8 4.2l-1.4 1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"></path></svg></button>
+    {{if or (eq .AuthMode "password") (eq .AuthMode "oidc")}}{{with .Viewer}}<form method="post" action="/logout"><button class="link" type="submit">Sign out {{.Name}}</button></form>{{end}}{{end}}
+  </div>
+</header>
+<nav class="tabs" aria-label="Sections">
+  <a href="{{.Link "/"}}"{{if eq .Nav "dashboard"}} aria-current="page"{{end}}>Overview</a>
+  <a href="{{.Link "/messages"}}"{{if eq .Nav "messages"}} aria-current="page"{{end}}>Messages</a>
+  <a href="{{.Link "/queue"}}"{{if eq .Nav "queue"}} aria-current="page"{{end}}>Queue{{if .QueueCount}} <span class="count">{{num .QueueCount}}</span>{{end}}</a>
+  <a href="{{.Link "/providers"}}"{{if eq .Nav "providers"}} aria-current="page"{{end}}>Providers</a>
+  <a href="{{.Link "/domains"}}"{{if eq .Nav "domains"}} aria-current="page"{{end}}>Domains</a>
+  <a href="{{.Link "/servers"}}"{{if eq .Nav "servers"}} aria-current="page"{{end}}>Servers{{if .Servers}} <span class="count">{{len .Servers}}</span>{{end}}</a>
+  <a href="{{.Link "/alerts"}}"{{if eq .Nav "alerts"}} aria-current="page"{{end}}>Alerts{{if .Firing}} <span class="count firing">{{.Firing}}</span>{{end}}</a>
+  {{if .Controls}}
+  <div class="pickers">
+    {{if .Sites}}
+    <details class="menu">
+      <summary>{{if .Site}}{{.SiteName}}{{else}}All sites{{end}}</summary>
+      <div>
+        <a href="{{.Link .Path "site" ""}}"{{if not .Site}} aria-current="true"{{end}}>All sites</a>
+        {{range .Sites}}<a href="{{$.Link $.Path "site" .Value}}"{{if eq .Value $.Site}} aria-current="true"{{end}}>{{.Name}}</a>{{end}}
+      </div>
+    </details>
+    {{end}}
+    {{if .Periodic}}
+    {{if gt (len .Servers) 1}}
+    <details class="menu">
+      <summary>{{or .Server "All servers"}}</summary>
+      <div>
+        <a href="{{.Link .Path "server" ""}}"{{if not .Server}} aria-current="true"{{end}}>All servers</a>
+        {{range .Servers}}<a href="{{$.Link $.Path "server" .}}"{{if eq . $.Server}} aria-current="true"{{end}}>{{.}}</a>{{end}}
+      </div>
+    </details>
+    {{end}}
+    <div class="seg" role="group" aria-label="Period">
+      {{range periods}}<a href="{{$.Link $.Path "period" .}}"{{if eq . $.Period}} aria-current="true"{{end}}>{{.}}</a>{{end}}
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+</nav>
+<main>
+{{template "content" .}}
+</main>
+<footer>Mailinois {{.Version}} · times in {{zone}}</footer>
+</body>
+</html>
+
+{{define "badge"}}<span class="badge s-{{.}}">{{.}}</span>{{end}}
+
+{{define "failures"}}
+{{if .}}
+<div class="scroll">
+<table>
+  <thead><tr><th>When</th><th>Server</th><th>Recipient</th><th>Status</th><th class="response">Response</th></tr></thead>
+  <tbody>
+  {{range .}}
+  <tr>
+    <td class="nowrap"><a href="/messages/{{.MessageID}}">{{when .At}}</a></td>
+    <td class="nowrap">{{.Server}}</td>
+    <td>{{or .Recipient (sender .Sender)}}</td>
+    <td class="nowrap">{{template "badge" .Status}}{{with .DSN}} <code>{{.}}</code>{{end}}</td>
+    <td class="response">{{.Response}}</td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+</div>
+{{else}}
+<p class="empty">Nothing failed in this period.</p>
+{{end}}
+{{end}}

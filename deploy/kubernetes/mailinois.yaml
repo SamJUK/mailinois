@@ -1,0 +1,174 @@
+# Mailinois on Kubernetes: one replica on a volume, the dashboard, API and agent ingest on 7480, syslog on 5514.
+#
+#   kubectl create namespace mailinois
+#   kubectl -n mailinois create secret generic mailinois --from-literal=password='<a long password>'
+#   kubectl -n mailinois apply -f deploy/kubernetes/mailinois.yaml
+#
+# Then sign in as admin: kubectl -n mailinois port-forward svc/mailinois 7480, and open http://localhost:7480.
+# Postfix with the agent beside it is in postfix-with-agent.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mailinois
+  labels:
+    app.kubernetes.io/name: mailinois
+data:
+  mailinois.yaml: |
+    listen:
+      http: ":7480"
+      syslog: ":5514"
+    database:
+      url: "sqlite:/data/mailinois.db"
+    auth:
+      # Password mode with one user, admin, comes from MAILINOIS_PASSWORD_FILE in the StatefulSet.
+      #
+      # Behind an ingress controller, list its pods' addresses (or the pod network), so sign-in limits count
+      # each client rather than the controller:
+      # trusted_proxies: ["10.244.0.0/16"]
+      tokens:
+        # One per agent or log shipper. `mailinois token` prints a token and its hash: the hash goes here, the
+        # token in the agent's Secret.
+        - name: postfix
+          hash: "sha256:replace-with-the-hash-mailinois-token-prints"
+          scopes: [ingest]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailinois
+  labels:
+    app.kubernetes.io/name: mailinois
+spec:
+  selector:
+    app.kubernetes.io/name: mailinois
+  ports:
+    - name: http
+      port: 7480
+      targetPort: http
+    - name: syslog
+      port: 5514
+      targetPort: syslog
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mailinois
+  labels:
+    app.kubernetes.io/name: mailinois
+spec:
+  # One replica, always: SQLite has one writer, and Mailinois ties each log line to the lines before it for the
+  # same queue ID, which needs a single process. A restart loses nothing: rsyslog's queue and the agent's spool
+  # hold lines until it is back.
+  replicas: 1
+  serviceName: mailinois
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mailinois
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mailinois
+    spec:
+      # No MAILINOIS_SERVICE_HOST and the like from Kubernetes: Mailinois reads MAILINOIS_* variables as settings.
+      enableServiceLinks: false
+      securityContext:
+        # The image's distroless nonroot user. fsGroup makes the volume writable for it.
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mailinois
+          image: ghcr.io/samjuk/mailinois:v0.1.0
+          args: ["serve", "-config", "/etc/mailinois/mailinois.yaml"]
+          env:
+            - name: MAILINOIS_PASSWORD_FILE
+              value: /run/secrets/mailinois/password
+          ports:
+            - name: http
+              containerPort: 7480
+            - name: syslog
+              containerPort: 5514
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 384Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/mailinois
+              readOnly: true
+            - name: password
+              mountPath: /run/secrets/mailinois
+              readOnly: true
+            # SQLite's temporary files, with the root filesystem read-only.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: mailinois
+        - name: password
+          secret:
+            secretName: mailinois
+        - name: tmp
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+# Syslog has no authentication: anyone who reaches 5514 can add lines. Only pods labelled
+# mailinois.io/sender: "true", in any namespace, may. 7480 is open to the cluster, for agents, log shippers and an
+# ingress controller: Mailinois checks tokens and signs people in itself. Enforced only where the cluster's network
+# plugin supports NetworkPolicy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mailinois
+  labels:
+    app.kubernetes.io/name: mailinois
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: mailinois
+  policyTypes: ["Ingress"]
+  ingress:
+    - ports:
+        - port: 7480
+          protocol: TCP
+    - from:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              mailinois.io/sender: "true"
+      ports:
+        - port: 5514
+          protocol: TCP

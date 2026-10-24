@@ -1,0 +1,234 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { Code } from '@astrojs/starlight/components';
+import Features from '../components/landing/Features.astro';
+import Flow from '../components/landing/Flow.astro';
+import { withBase } from '../lib/url';
+
+const compose = `services:
+  mailinois:
+    image: ghcr.io/samjuk/mailinois
+    restart: unless-stopped
+    environment:
+      MAILINOIS_DATABASE_URL: sqlite:/data/mailinois.db
+    ports:
+      - "7480:7480"       # dashboard and REST API
+      - "5514:5514"       # syslog from your Postfix hosts, TCP
+      - "5514:5514/udp"   # and UDP
+    volumes:
+      - mailinois-data:/data
+
+volumes:
+  mailinois-data:`;
+
+const rsyslog = `sudo cp deploy/rsyslog/mailinois.conf /etc/rsyslog.d/
+# set target="…" in that file to Mailinois's address, then:
+sudo systemctl restart rsyslog`;
+---
+
+<StarlightPage
+	frontmatter={{
+		title: 'Self-hosted Postfix observability',
+		description:
+			'Mailinois reads Postfix’s logs and follows each message by queue ID, from the app that handed it over to every recipient’s final answer. One Go binary on your own servers, never in the delivery path.',
+		template: 'splash',
+		hero: {
+			title: 'Mailinois',
+			tagline: 'Follow every message through your Postfix relays.',
+			actions: [
+				{ text: 'Try the demo', link: '/demo/', variant: 'primary', icon: 'right-arrow' },
+				{ text: 'Example report', link: '/example-report.html', variant: 'secondary' },
+				{ text: 'Quick start', link: '/docs/quick-start/', variant: 'minimal' },
+			],
+		},
+		prev: false,
+		next: false,
+	}}
+>
+	<section>
+		<h2 id="what-it-is">Postfix stays the mail server</h2>
+		<p>
+			Mailinois reads Postfix’s logs over syslog, follows every message by queue ID from the app that handed it
+			over to each recipient’s final answer, and serves a dashboard of what happened: deliveries, deferrals,
+			bounces, rejections and the queue.
+		</p>
+		<p>
+			It is never in the delivery path. If Mailinois or its database goes down, Postfix keeps accepting,
+			queueing and delivering mail. (The optional milter for captures is set to accept mail whenever Mailinois
+			is unreachable, so that holds with captures on too.)
+		</p>
+	</section>
+
+	<figure class="shot">
+		<a href={withBase('/demo/')} aria-label="Explore the interactive Mailinois demo">
+		<img src={withBase('/screenshots/dashboard.png')} width="1440" height="1250" alt="The Mailinois overview: totals, outcomes by hour, recent failures, a live tail of deliveries, blocklists and sending domains." loading="lazy" />
+		</a>
+		<figcaption>Made-up traffic from two relays. <a href={withBase('/demo/')}>Explore the interactive demo</a>: search messages, follow a delivery and try a DNS failure, entirely in your browser.</figcaption>
+	</figure>
+
+	<section>
+		<h2 id="features">What you get</h2>
+		<Features />
+	</section>
+
+	<section>
+		<h2 id="how-it-works">How it fits together</h2>
+		<Flow />
+		<p>
+			Each server shows up under its own hostname when its first line arrives, so adding a relay is pointing
+			its rsyslog at Mailinois. <a href={withBase('/docs/how-it-works/')}>How Mailinois follows a message</a>.
+		</p>
+	</section>
+
+	<section>
+		<h2 id="self-host">Self-host in a minute</h2>
+		<p>Run it with Docker Compose. The SQLite database lives on the volume.</p>
+		<Code code={compose} lang="yaml" title="compose.yaml" />
+		<p>
+			Then point each Postfix host’s rsyslog at it. The file ships in the repository and leaves Postfix’s own
+			log alone.
+		</p>
+		<Code code={rsyslog} lang="sh" />
+		<p>
+			Open <code>http://&lt;your server&gt;:7480</code> and the first messages appear as Postfix logs them.
+			Prefer a binary? <code>mailinois serve</code> does the same, with SQLite in the working directory, and
+			<a href={withBase('/docs/install/')}>Installing</a> has a systemd unit and Kubernetes manifests. Postfix
+			somewhere else, or only journald? <a href={withBase('/docs/sending-logs/')}>Sending logs</a> covers the
+			agent, Vector and Fluent Bit.
+		</p>
+		<p class="note">
+			To look around first, try the local preview with made-up traffic from the
+			<a href={withBase('/docs/quick-start/')}>quick start</a>. There is no login in this example, so read <a href={withBase('/docs/authentication/')}>Authentication</a> before the
+			dashboard leaves a private network.
+		</p>
+	</section>
+
+	<section>
+		<h2 id="privacy">Built for privacy</h2>
+		<ul class="privacy not-content">
+			<li>
+				<h3>Metadata by default</h3>
+				<p>
+					Mailinois keeps what Postfix logs: addresses, queue IDs, Message-IDs, SMTP responses and the lines
+					themselves. It sees no message bodies unless you turn captures on.
+				</p>
+			</li>
+			<li>
+				<h3>Captures are opt-in</h3>
+				<p>
+					Headers only, or whole messages, through the milter. Captures have their own retention, seven days
+					unless you change it.
+				</p>
+			</li>
+			<li>
+				<h3>On your own infrastructure</h3>
+				<p>One binary and one database on your servers. There is no hosted service in between.</p>
+			</li>
+		</ul>
+		<p><a href={withBase('/docs/privacy-and-security/')}>What it stores, and how to keep it private</a>.</p>
+	</section>
+
+	<section>
+		<h2 id="guides">Questions it answers, setups it fits</h2>
+		<div class="guides not-content">
+			<div>
+				<h3><a href={withBase('/use-cases/')}>Use cases</a></h3>
+				<ul>
+					<li><a href={withBase('/use-cases/postfix-deferred-mail/')}>Why is Postfix deferring mail?</a></li>
+					<li><a href={withBase('/use-cases/postfix-bounces/')}>Tracking Postfix bounces</a></li>
+					<li><a href={withBase('/use-cases/postfix-log-analyzer/')}>A Postfix log analyser that follows each message</a></li>
+					<li><a href={withBase('/use-cases/blocklist-and-dns-monitoring/')}>Blocklist and DNS monitoring</a></li>
+					<li><a href={withBase('/use-cases/transactional-email/')}>Did the password reset email arrive?</a></li>
+					<li><a href={withBase('/use-cases/many-sites-one-relay/')}>Many client sites on one relay</a></li>
+				</ul>
+			</div>
+			<div>
+				<h3><a href={withBase('/setups/')}>Setups</a></h3>
+				<ul>
+					<li><a href={withBase('/setups/postfix-debian-ubuntu/')}>Postfix on Debian or Ubuntu</a></li>
+					<li><a href={withBase('/setups/postfix-docker/')}>Postfix in Docker</a></li>
+					<li><a href={withBase('/setups/mailcow/')}>mailcow</a></li>
+					<li><a href={withBase('/setups/postfix-kubernetes/')}>Postfix on Kubernetes</a></li>
+				</ul>
+			</div>
+		</div>
+	</section>
+</StarlightPage>
+
+<style>
+	section {
+		margin-top: 4rem;
+	}
+
+	section:first-of-type {
+		margin-top: 2rem;
+	}
+
+	section > p {
+		max-width: 44rem;
+	}
+
+	h2 {
+		margin-bottom: 1.25rem;
+	}
+
+	.note {
+		padding: 0.875rem 1rem;
+		font-size: var(--sl-text-sm);
+		color: var(--mn-muted);
+		background: var(--mn-panel);
+		border-left: 3px solid var(--mn-accent);
+		border-radius: 0 0.375rem 0.375rem 0;
+	}
+
+	.privacy {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+		gap: 1.5rem;
+		padding: 0;
+		margin: 0;
+		list-style: none;
+	}
+
+	.privacy li {
+		padding-top: 1rem;
+		border-top: 2px solid var(--mn-accent);
+	}
+
+	.privacy h3 {
+		margin-bottom: 0.5rem;
+		font-size: var(--sl-text-lg);
+		font-weight: 600;
+		color: var(--sl-color-white);
+	}
+
+	.privacy p {
+		color: var(--mn-muted);
+	}
+
+	.guides {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+		gap: 1.5rem;
+	}
+
+	.guides > div {
+		padding-top: 1rem;
+		border-top: 2px solid var(--mn-accent);
+	}
+
+	.guides h3 {
+		margin-bottom: 0.5rem;
+		font-size: var(--sl-text-lg);
+		font-weight: 600;
+	}
+
+	.guides ul {
+		padding-left: 1.1rem;
+		margin: 0;
+	}
+
+	.guides li + li {
+		margin-top: 0.35rem;
+	}
+</style>

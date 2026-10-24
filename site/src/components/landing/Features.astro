@@ -1,0 +1,157 @@
+---
+import { withBase } from '../../lib/url';
+
+const features: { title: string; body: string; code?: string; link?: string }[] = [
+	{
+		title: 'Every message’s timeline',
+		body: 'Each message by queue ID: the client that handed it over, its Message-ID, every delivery attempt and each recipient’s final answer, in order.',
+		link: 'docs/how-it-works/',
+	},
+	{
+		title: 'Deferrals and bounces, explained',
+		body: 'Grouped by provider (Google, Microsoft, Yahoo, Apple and everyone else) and set against the previous period.',
+	},
+	{
+		title: 'The queue',
+		body: 'What is waiting on each server, and why each message is still there.',
+		link: 'docs/how-it-works/#queue-depth-from-the-logs',
+	},
+	{
+		title: 'Many servers, many sites',
+		body: 'Any number of Postfix servers and sending domains in one place. Look at one site or server alone, or all of them together.',
+		link: 'docs/sites-and-search/',
+	},
+	{
+		title: 'A search language',
+		code: 'from:store-a.example status:deferred dsn:4.7 after:2d',
+		body: 'In the ⌘K box and on the Messages page.',
+		link: 'docs/sites-and-search/#search',
+	},
+	{
+		title: 'Headers and bodies, if you want them',
+		body: 'Optional capture through a Postfix milter: headers only, or the whole message, with its own retention.',
+		link: 'docs/capture/',
+	},
+	{
+		title: 'SPF, DKIM and DMARC',
+		body: 'SPF evaluated against every sending IP, DKIM keys for every selector seen, and each domain’s DMARC policy and alignment.',
+		link: 'docs/dns-checks/#sending-domains',
+	},
+	{
+		title: 'Reverse DNS and blocklists',
+		body: 'Forward-confirmed reverse DNS and blocklist lookups for each sending IP, IPv4 and IPv6.',
+		link: 'docs/dns-checks/#sending-ips',
+	},
+	{
+		title: 'Alerts to webhooks',
+		body: 'Bounce and deferral rates, the queue, blocklistings, silent servers and failing DNS, sent as JSON or to Slack or Discord.',
+		link: 'docs/alerts/',
+	},
+	{
+		title: 'A REST API',
+		body: 'JSON under /api/v1, with read-only tokens and the same search language.',
+		link: 'docs/api/',
+	},
+	{
+		title: 'Prometheus metrics',
+		body: 'Queue depth, delivery outcomes and blocklist listings per server, plus Mailinois’s own health.',
+		link: 'docs/metrics/',
+	},
+	{
+		title: 'One-off reports',
+		body: 'No server needed: point mailinois report at a mail log and get one HTML, Markdown or JSON file with every message’s story. For the customer who says the email never came.',
+		code: 'mailinois report -q "to:ann@gmail.example" /var/log/mail.log',
+		link: 'example-report.html',
+	},
+	{
+		title: 'One binary',
+		body: 'A single Go binary with SQLite built in, PostgreSQL if you would rather. Run it under systemd, in Docker or on Kubernetes.',
+		link: 'docs/install/',
+	},
+];
+---
+
+<ul class="features not-content">
+	{
+		features.map((f) => (
+			<li>
+				{f.link ? (
+					<a class="card" href={withBase(f.link)}>
+						<h3>{f.title}</h3>
+						{f.code && <code>{f.code}</code>}
+						<p>{f.body}</p>
+					</a>
+				) : (
+					<div class="card">
+						<h3>{f.title}</h3>
+						<p>{f.body}</p>
+					</div>
+				)}
+			</li>
+		))
+	}
+</ul>
+
+<style>
+	.features {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+		gap: 1px;
+		padding: 0;
+		margin: 0;
+		list-style: none;
+		background: var(--mn-line);
+		border: 1px solid var(--mn-line);
+		border-radius: 0.5rem;
+		overflow: hidden;
+	}
+
+	li {
+		background: var(--sl-color-bg);
+	}
+
+	.card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		height: 100%;
+		padding: 1.25rem 1.25rem 1.5rem;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	a:hover,
+	a:focus-visible {
+		background: var(--mn-panel);
+	}
+
+	a:hover h3,
+	a:focus-visible h3 {
+		color: var(--mn-accent);
+	}
+
+	h3 {
+		font-size: var(--sl-text-base);
+		font-weight: 600;
+		line-height: 1.3;
+		color: var(--sl-color-white);
+	}
+
+	p {
+		font-size: var(--sl-text-sm);
+		line-height: 1.6;
+		color: var(--mn-muted);
+	}
+
+	code {
+		align-self: flex-start;
+		max-width: 100%;
+		padding: 0.2rem 0.45rem;
+		font-family: var(--__sl-font-mono);
+		font-size: var(--sl-text-xs);
+		color: var(--mn-accent);
+		background: var(--mn-accent-soft);
+		border-radius: 0.25rem;
+		overflow-wrap: anywhere;
+	}
+</style>

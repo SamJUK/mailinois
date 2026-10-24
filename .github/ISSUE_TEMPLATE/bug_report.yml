@@ -1,0 +1,25 @@
+name: Bug report
+description: Something Mailinois got wrong or a log line it didn't follow
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Log lines
+      description: The Postfix lines for the message, if it's about one. Replace real addresses and hostnames.
+      render: text
+  - type: input
+    attributes:
+      label: Version
+      description: "`mailinois version` or the image tag"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Setup
+      description: Database, how logs arrive (rsyslog, agent, import) and Postfix version or image.

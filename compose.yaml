@@ -1,0 +1,58 @@
+# Local preview: docker compose up -d --build, then open http://localhost:7480.
+#
+# mailinois runs in demo mode (two weeks of made-up traffic, more every few seconds) on SQLite, and also
+# takes real mail: the postfix service forwards its log over syslog, hands every message to Mailinois's
+# capture milter, and relays to Mailpit, so mail sent to localhost:2525 shows up in both. Nothing leaves
+# your machine. PostgreSQL is only for the tests: docker compose --profile test up -d postgres.
+services:
+  mailinois:
+    build: .
+    environment:
+      MAILINOIS_CONFIG: /etc/mailinois.yaml
+    volumes:
+      - data:/data
+      - ./deploy/compose/mailinois.yaml:/etc/mailinois.yaml:ro
+    ports: ["127.0.0.1:7480:7480"]
+    healthcheck:
+      test: ["CMD", "/mailinois", "healthcheck"]
+      interval: 30s
+
+  postfix:
+    image: boky/postfix:5.1.0
+    hostname: postfix-local
+    environment:
+      ALLOWED_SENDER_DOMAINS: example.com
+      RELAYHOST: "[mailpit]:1025"
+      POSTFIX_smtpd_tls_security_level: none
+      # Everything goes to Mailpit, so made-up domains (example.com has a null MX) are accepted too.
+      POSTFIX_smtpd_recipient_restrictions: reject_non_fqdn_recipient, check_sender_access lmdb:/etc/postfix/allowed_senders, reject
+      # Mailinois's milter with its own default_action, so mail goes through while it is down.
+      POSTFIX_smtpd_milters: "{ inet:mailinois:8892, default_action=accept }"
+      POSTFIX_non_smtpd_milters: "{ inet:mailinois:8892, default_action=accept }"
+      POSTFIX_milter_protocol: "6"
+      POSTFIX_milter_command_timeout: 5s
+      POSTFIX_milter_content_timeout: 15s
+    volumes:
+      - ./deploy/rsyslog/mailinois.conf:/etc/rsyslog.d/mailinois.conf:ro
+    ports: ["127.0.0.1:2525:587"]
+    depends_on: [mailinois, mailpit]
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports: ["127.0.0.1:8325:8025"]
+
+  postgres:
+    image: postgres:18-alpine
+    profiles: [test]
+    environment:
+      POSTGRES_USER: mailinois
+      POSTGRES_PASSWORD: mailinois
+      POSTGRES_DB: mailinois_test
+    ports: ["127.0.0.1:55432:5432"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mailinois"]
+      interval: 2s
+      retries: 30
+
+volumes:
+  data:

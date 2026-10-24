@@ -1,0 +1,73 @@
+{{define "content"}}{{with .Data}}
+<section class="panel flush">
+  <div class="panel-head"><h2>Postfix servers</h2><span class="sub">last 24 hours; a server appears when its first line arrives</span></div>
+  {{if .Servers}}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Server</th><th>Last line</th><th class="num">Received</th><th class="num">Delivered</th><th class="num">Deferred</th><th class="num">Failed</th><th class="num">In queue</th></tr></thead>
+    <tbody>
+    {{range .Servers}}
+    <tr>
+      <td><a href="{{$.Link "/" "server" .Name}}">{{.Name}}</a> <span class="sub">since {{when .FirstSeen}}</span></td>
+      <td class="nowrap">{{ago .LastSeen}}</td>
+      <td class="num">{{num .Received}}</td>
+      <td class="num">{{num .Sent}}</td>
+      <td class="num">{{num .Deferred}}</td>
+      <td class="num">{{num .Failed}}</td>
+      <td class="num">{{num .Queue}}</td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="empty">No server has sent a line yet.</p>
+  {{end}}
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>Sending IPs</h2><span class="sub">reverse DNS and blocklists</span></div>
+  {{if .IPs}}
+  <div class="ips">
+  {{range .IPs}}
+    <div class="ip">
+      <div class="ip-head">
+        <strong class="mono">{{.IP}}</strong>
+        {{if .PTR}}<span>{{.PTR}}</span> {{if .ForwardConfirmed}}<span class="badge s-sent" title="The PTR name resolves back to this IP">forward-confirmed</span>{{else}}<span class="badge s-bounced" title="The PTR name does not resolve back to this IP">PTR mismatch</span>{{end}}{{else if .CheckedAt}}<span class="badge s-bounced">no PTR</span>{{end}}
+        <span class="sub">{{if .CheckedAt}}checked {{ago (deref .CheckedAt)}}{{else}}not checked yet{{end}}</span>
+      </div>
+      <ul class="zones">
+      {{range .Checks}}<li class="z-{{.Status}}" title="{{.Status}}{{with .Response}}: {{.}}{{end}} ({{when .CheckedAt}})">{{.Zone}}</li>{{end}}
+      </ul>
+    </div>
+  {{end}}
+  </div>
+  {{else}}
+  <p class="empty">No sending IPs configured. Set <code>checks.sending_ips</code> to the public IPv4 and IPv6 addresses your relays send from.</p>
+  {{end}}
+</section>
+
+<section class="panel flush">
+  <div class="panel-head"><h2>Listing history</h2><span class="sub">every change of status</span></div>
+  {{if .Changes}}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>When</th><th>IP</th><th>Blocklist</th><th>Status</th><th class="response">Answer</th></tr></thead>
+    <tbody>
+    {{range .Changes}}
+    <tr>
+      <td class="nowrap">{{when .CheckedAt}}</td>
+      <td class="mono">{{.IP}}</td>
+      <td>{{.Zone}}</td>
+      <td>{{template "badge" .Status}}</td>
+      <td class="response">{{.Response}}</td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="empty">No checks yet.</p>
+  {{end}}
+</section>
+{{end}}{{end}}

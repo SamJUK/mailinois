@@ -1,0 +1,56 @@
+{{define "content"}}{{with .Data}}
+<section class="panel flush">
+  <div class="panel-head"><h2>Rules</h2><span class="sub">from the config file; checked every minute</span></div>
+  {{if .Rules}}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Alert</th><th>State</th><th class="num">Now</th><th class="num">Above</th><th>Over</th><th>Scope</th><th>Notifies</th><th>Since</th></tr></thead>
+    <tbody>
+    {{range .Rules}}
+    <tr>
+      <td><strong>{{.Name}}</strong> <span class="sub mono">{{.Metric}}</span></td>
+      <td>{{if eq .State.State "firing"}}<span class="badge s-bounced">firing</span>{{else}}<span class="badge s-sent">ok</span>{{end}}</td>
+      <td class="num mono">{{metric .Metric .State.Value}}</td>
+      <td class="num mono">{{metric .Metric (threshold .Above)}}</td>
+      <td class="nowrap">{{dur .Window.D}}</td>
+      <td class="nowrap">{{with .Site}}site {{.}} {{end}}{{with .Provider}}{{provider .}} {{end}}{{with .Server}}{{.}}{{end}}{{if not (or .Site .Provider .Server)}}everything{{end}}</td>
+      <td>{{range .Notify}}<span class="mono">{{.}}</span> {{else}}<span class="sub">nobody</span>{{end}}</td>
+      <td class="nowrap">{{if .State.Since.IsZero}}–{{else}}{{ago .State.Since}}{{end}}</td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="empty">No alerts configured. Add some under <code>alerts:</code> in the config file.</p>
+  {{end}}
+</section>
+
+<div class="split">
+  <section class="panel flush split-main">
+    <div class="panel-head"><h2>History</h2><span class="sub">every time an alert started or stopped firing</span></div>
+    {{if .Events}}
+    <div class="scroll">
+    <table>
+      <thead><tr><th>When</th><th>Alert</th><th>State</th></tr></thead>
+      <tbody>
+      {{range .Events}}
+      <tr><td class="nowrap">{{when .At}}</td><td>{{.Name}}</td><td>{{if eq .State "firing"}}<span class="badge s-bounced">firing</span>{{else}}<span class="badge s-sent">resolved</span>{{end}}</td></tr>
+      {{end}}
+      </tbody>
+    </table>
+    </div>
+    {{else}}
+    <p class="empty">Nothing has fired yet.</p>
+    {{end}}
+  </section>
+  <section class="panel split-side">
+    <div class="panel-head"><h2>Webhooks</h2></div>
+    {{range .Webhooks}}
+    <div class="domline"><span><strong>{{.Name}}</strong> <span class="sub mono">{{.Format}}</span></span><span class="sub mono">{{host .URL}}</span></div>
+    {{else}}
+    <p class="empty">None configured.</p>
+    {{end}}
+  </section>
+</div>
+{{end}}{{end}}

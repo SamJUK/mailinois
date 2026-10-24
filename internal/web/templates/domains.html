@@ -1,0 +1,29 @@
+{{define "content"}}
+<p class="lede">One row per sending domain. Expand a domain for the checked IPs, DKIM selectors and full DNS records.</p>
+<section class="panel flush domain-list" aria-label="Domain health">
+  <div class="domain-heading" aria-hidden="true"><span>Domain</span><span>SPF</span><span>DKIM</span><span>DMARC</span><span>Overall</span><span>Checked</span></div>
+  {{range .Data}}
+  <details class="domain-row" id="{{.Domain}}">
+    <summary>
+      <span class="domain-name">{{.Domain}}</span>
+      <span class="domain-check" data-kind="SPF"><span class="check-label">SPF </span>{{template "dns-status" (.Check "spf")}}</span>
+      <span class="domain-check" data-kind="DKIM"><span class="check-label">DKIM </span>{{template "dns-status" (.Check "dkim")}}</span>
+      <span class="domain-check" data-kind="DMARC"><span class="check-label">DMARC </span>{{template "dns-status" (.Check "dmarc")}}</span>
+      <span class="domain-overall"><span class="check-label">Overall </span><span class="badge s-{{severity .Worst}}">{{.Worst}}</span></span>
+      <span class="domain-checked">{{ago .CheckedAt}}</span>
+    </summary>
+    <div class="domain-details scroll">
+      <table>
+        <thead><tr><th>Check</th><th>IP or selector</th><th>Result</th><th>What it means</th><th>Record</th><th>Checked</th></tr></thead>
+        <tbody>{{range .Results}}
+          <tr><td class="mono">{{.Kind}}</td><td class="mono">{{or .Subject "–"}}</td><td>{{template "dns-status" .}}</td><td>{{.Summary}}</td><td class="record mono">{{.Record}}</td><td class="nowrap">{{ago .CheckedAt}}</td></tr>
+        {{end}}</tbody>
+      </table>
+    </div>
+  </details>
+  {{else}}
+  <p class="empty">No DNS checks yet. Sending domains come from your sites, <code>checks.domains</code>, and the domains seen sending; SPF needs <code>checks.sending_ips</code>.</p>
+  {{end}}
+</section>
+{{end}}
+{{define "dns-status"}}{{with .}}<span class="badge s-{{severity .Status}}" title="{{.Kind}}: {{.Summary}}">{{.Status}}</span>{{else}}<span class="sub">not checked</span>{{end}}{{end}}

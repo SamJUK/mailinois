@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Mailinois</title>
+<link rel="icon" href="{{asset "logo.svg"}}" type="image/svg+xml">
+<script src="{{asset "app.js"}}"></script>
+<link rel="stylesheet" href="{{asset "app.css"}}">
+</head>
+<body class="login">
+<main>
+  <div class="panel signin">
+    <img src="{{asset "logo.svg"}}" alt="" width="64" height="64">
+    <h1>Sign in to Mailinois</h1>
+    {{with .Error}}<p class="error" role="alert">{{.}}</p>{{end}}
+    {{with .SSO}}<a class="btn primary" href="/auth/login?next={{$.Next}}">{{.}}</a>{{end}}
+    {{if .Passwords}}
+    <form class="signin-form" method="post" action="/login">
+      {{if .SSO}}<p class="or">or with a password</p>{{end}}
+      <input type="hidden" name="next" value="{{.Next}}">
+      <label for="name">Name</label>
+      <input id="name" name="name" value="{{.Name}}" autocomplete="username" required{{if not .SSO}} autofocus{{end}}>
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+      <button class="btn{{if not .SSO}} primary{{end}}" type="submit">Sign in</button>
+    </form>
+    {{end}}
+  </div>
+</main>
+</body>
+</html>

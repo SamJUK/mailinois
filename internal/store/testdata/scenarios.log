@@ -1,0 +1,73 @@
+2026-10-18T09:00:00.100000+00:00 relay-1 postfix/smtpd[100]: connect from app-1[10.1.0.4]
+2026-10-18T09:00:00.120000+00:00 relay-1 postfix/smtpd[100]: 0DFD162666: client=app-1[10.1.0.4], sasl_method=PLAIN, sasl_username=acme
+2026-10-18T09:00:00.150000+00:00 relay-1 postfix/cleanup[101]: 0DFD162666: message-id=<a1@acme.test>
+2026-10-18T09:00:00.151000+00:00 relay-1 postfix/cleanup[101]: 0DFD162666: info: header Subject: Your sign-in code from app-1[10.1.0.4]; from=<hello@acme.test> to=<ann@gmail.example> proto=ESMTP helo=<app-1>
+2026-10-18T09:00:00.160000+00:00 relay-1 opendkim[50]: 0DFD162666: DKIM-Signature field added (s=demo2026, d=acme.test)
+2026-10-18T09:00:00.200000+00:00 relay-1 postfix/qmgr[90]: 0DFD162666: from=<hello@acme.test>, size=673, nrcpt=1 (queue active)
+2026-10-18T09:00:00.210000+00:00 relay-1 postfix/smtpd[100]: disconnect from app-1[10.1.0.4] ehlo=1 auth=1 mail=1 rcpt=1 data=1 quit=1 commands=6
+2026-10-18T09:00:00.900000+00:00 relay-1 postfix/smtp[102]: 0DFD162666: to=<Ann@gmail.example>, relay=gmail-smtp-in.l.google.com[173.194.220.26]:25, delay=0.78, delays=0.11/0.06/0.13/0.48, dsn=2.0.0, status=sent (250 2.0.0 OK  1792352387 2adb3069b0e04-5be50d09f1esi4682602e87.221 - gsmtp)
+2026-10-18T09:00:00.910000+00:00 relay-1 postfix/qmgr[90]: 0DFD162666: removed
+2026-10-18T09:01:00.000000+00:00 relay-1 postfix/smtpd[100]: 1A2B3C4D5E: client=app-1[10.1.0.4]
+2026-10-18T09:01:00.050000+00:00 relay-1 postfix/cleanup[101]: 1A2B3C4D5E: message-id=<b2@acme.test>
+2026-10-18T09:01:00.100000+00:00 relay-1 postfix/qmgr[90]: 1A2B3C4D5E: from=<hello@acme.test>, size=1200, nrcpt=1 (queue active)
+2026-10-18T09:01:01.500000+00:00 relay-1 postfix/smtp[103]: 1A2B3C4D5E: to=<bob@outlook.example>, relay=outlook-com.olc.protection.outlook.com[52.101.68.4]:25, delay=1.5, delays=0.1/0/0.6/0.8, dsn=4.7.650, status=deferred (host outlook-com.olc.protection.outlook.com[52.101.68.4] said: 451 4.7.650 The mail server [192.0.2.10] has been temporarily rate limited due to IP reputation. (S775) (in reply to MAIL FROM command))
+2026-10-18T09:11:02.000000+00:00 relay-1 postfix/smtp[104]: 1A2B3C4D5E: to=<bob@outlook.example>, relay=outlook-com.olc.protection.outlook.com[52.101.68.4]:25, delay=602, delays=600/0/0.9/1.1, dsn=4.7.650, status=deferred (host outlook-com.olc.protection.outlook.com[52.101.68.4] said: 451 4.7.650 The mail server [192.0.2.10] has been temporarily rate limited due to IP reputation. (S775) (in reply to MAIL FROM command))
+2026-10-18T09:31:03.000000+00:00 relay-1 postfix/smtp[105]: 1A2B3C4D5E: to=<bob@outlook.example>, relay=outlook-com.olc.protection.outlook.com[52.101.68.4]:25, delay=1803, delays=1800/0/1.2/1.8, dsn=2.6.0, status=sent (250 2.6.0 <b2@acme.test> [InternalId=1, Hostname=AM7PR02MB1234.eurprd02.prod.outlook.com] Queued mail for delivery)
+2026-10-18T09:31:03.010000+00:00 relay-1 postfix/qmgr[90]: 1A2B3C4D5E: removed
+2026-10-18T09:02:00.000000+00:00 relay-1 postfix/smtpd[100]: 2B3C4D5E6F: client=app-1[10.1.0.4]
+2026-10-18T09:02:00.050000+00:00 relay-1 postfix/cleanup[101]: 2B3C4D5E6F: message-id=<c3@acme.test>
+2026-10-18T09:02:00.100000+00:00 relay-1 postfix/qmgr[90]: 2B3C4D5E6F: from=<hello@acme.test>, size=900, nrcpt=1 (queue active)
+2026-10-18T09:02:00.700000+00:00 relay-1 postfix/smtp[106]: 2B3C4D5E6F: to=<nobody@example.net>, relay=mx.example.net[198.51.100.7]:25, delay=0.6, delays=0.1/0/0.2/0.3, dsn=5.1.1, status=bounced (host mx.example.net[198.51.100.7] said: 550 5.1.1 <nobody@example.net>: Recipient address rejected: User unknown in virtual mailbox table (in reply to RCPT TO command))
+2026-10-18T09:02:00.710000+00:00 relay-1 postfix/cleanup[101]: 3C4D5E6F70: message-id=<20261018090200.3C4D5E6F70@mail.example.net>
+2026-10-18T09:02:00.711000+00:00 relay-1 postfix/bounce[107]: 2B3C4D5E6F: sender non-delivery notification: 3C4D5E6F70
+2026-10-18T09:02:00.720000+00:00 relay-1 postfix/qmgr[90]: 3C4D5E6F70: from=<>, size=2900, nrcpt=1 (queue active)
+2026-10-18T09:02:00.730000+00:00 relay-1 postfix/qmgr[90]: 2B3C4D5E6F: removed
+2026-10-18T09:02:01.300000+00:00 relay-1 postfix/smtp[106]: 3C4D5E6F70: to=<hello@acme.test>, relay=mx.example.net[192.0.2.53]:25, delay=0.58, delays=0/0/0.3/0.28, dsn=2.0.0, status=sent (250 2.0.0 Ok)
+2026-10-18T09:02:01.310000+00:00 relay-1 postfix/qmgr[90]: 3C4D5E6F70: removed
+2026-10-18T09:03:00.000000+00:00 relay-1 postfix/smtpd[108]: connect from unknown[10.1.0.9]
+2026-10-18T09:03:00.020000+00:00 relay-1 postfix/smtpd[108]: NOQUEUE: reject: RCPT from unknown[10.1.0.9]: 554 5.7.1 <billing@example.org>: Sender address rejected: Access denied; from=<billing@example.org> to=<kim@gmail.example> proto=ESMTP helo=<worker>
+2026-10-18T09:03:00.030000+00:00 relay-1 postfix/smtpd[108]: disconnect from unknown[10.1.0.9] ehlo=1 mail=1 rcpt=0/1 quit=1 commands=3/4
+2026-10-18T09:04:00.000000+00:00 relay-1 postfix/smtpd[100]: 4D5E6F7081: client=app-1[10.1.0.4]
+2026-10-18T09:04:00.050000+00:00 relay-1 postfix/cleanup[101]: 4D5E6F7081: message-id=<e5@acme.test>
+2026-10-18T09:04:00.100000+00:00 relay-1 postfix/qmgr[90]: 4D5E6F7081: from=<hello@acme.test>, size=4100, nrcpt=3 (queue active)
+2026-10-18T09:04:00.800000+00:00 relay-1 postfix/smtp[109]: 4D5E6F7081: to=<carol@gmail.example>, relay=gmail-smtp-in.l.google.com[173.194.220.26]:25, delay=0.7, delays=0.1/0/0.3/0.3, dsn=2.0.0, status=sent (250 2.0.0 OK  1792352400 x1 - gsmtp)
+2026-10-18T09:04:01.200000+00:00 relay-1 postfix/smtp[110]: 4D5E6F7081: to=<dave@yahoo.example>, relay=mta5.am0.yahoodns.net[67.195.204.72]:25, delay=1.1, delays=0.1/0/0.5/0.5, dsn=4.7.0, status=deferred (host mta5.am0.yahoodns.net[67.195.204.72] said: 421 4.7.0 [TSS04] Messages from 192.0.2.10 temporarily deferred due to unexpected volume or user complaints - 4.16.55.1 (in reply to MAIL FROM command))
+2026-10-18T09:04:01.400000+00:00 relay-1 postfix/smtp[111]: 4D5E6F7081: to=<erin@icloud.example>, orig_to=<erin@example.com>, relay=mx01.mail.icloud.com[17.42.251.62]:25, delay=1.3, delays=0.1/0/0.6/0.6, dsn=2.0.0, status=sent (250 2.0.0 Ok: queued as 8f3a)
+2026-10-13T09:00:00.000000+00:00 relay-1 postfix/smtpd[100]: 5E6F708192: client=app-1[10.1.0.4]
+2026-10-13T09:00:00.100000+00:00 relay-1 postfix/qmgr[90]: 5E6F708192: from=<hello@acme.test>, size=800, nrcpt=1 (queue active)
+2026-10-13T09:00:30.000000+00:00 relay-1 postfix/smtp[112]: 5E6F708192: to=<frank@example.org>, relay=none, delay=30, delays=0.1/0/30/0, dsn=4.4.1, status=deferred (connect to mx.example.org[203.0.113.99]:25: Connection timed out)
+2026-10-17T21:00:00.000000+00:00 relay-1 postfix/smtp[113]: 5E6F708192: to=<frank@example.org>, relay=none, delay=388800, delays=388770/0/30/0, dsn=4.4.1, status=deferred (connect to mx.example.org[203.0.113.99]:25: Connection timed out)
+2026-10-18T09:00:05.000000+00:00 relay-1 postfix/qmgr[90]: 5E6F708192: from=<hello@acme.test>, status=expired, returned to sender
+2026-10-18T09:00:05.010000+00:00 relay-1 postfix/bounce[114]: 5E6F708192: sender non-delivery notification: 6F708192A3
+2026-10-18T09:00:05.020000+00:00 relay-1 postfix/qmgr[90]: 6F708192A3: from=<>, size=2400, nrcpt=1 (queue active)
+2026-10-18T09:00:05.030000+00:00 relay-1 postfix/qmgr[90]: 5E6F708192: removed
+2026-10-18T09:00:05.600000+00:00 relay-1 postfix/smtp[115]: 6F708192A3: to=<hello@acme.test>, relay=mx.example.net[192.0.2.53]:25, delay=0.6, delays=0/0/0.3/0.3, dsn=2.0.0, status=sent (250 2.0.0 Ok)
+2026-10-18T09:00:05.610000+00:00 relay-1 postfix/qmgr[90]: 6F708192A3: removed
+2026-10-18T10:00:00.000000+00:00 relay-1 postfix/smtpd[116]: 0DFD162666: client=app-2[10.1.0.5]
+2026-10-18T10:00:00.050000+00:00 relay-1 postfix/cleanup[101]: 0DFD162666: message-id=<g7@acme.test>
+2026-10-18T10:00:00.100000+00:00 relay-1 postfix/qmgr[90]: 0DFD162666: from=<hello@acme.test>, size=700, nrcpt=1 (queue active)
+2026-10-18T10:00:00.901000+00:00 relay-1 postfix/qmgr[90]: 0DFD162666: removed
+2026-10-18T10:00:00.900000+00:00 relay-1 postfix/smtp[117]: 0DFD162666: to=<gina@gmail.example>, relay=gmail-smtp-in.l.google.com[173.194.220.26]:25, delay=0.8, delays=0.1/0/0.3/0.4, dsn=2.0.0, status=sent (250 2.0.0 OK  1792356000 x2 - gsmtp)
+2026-10-18T09:05:00.000000+00:00 relay-2 postfix/smtpd[200]: 1A2B3C4D5E: client=app-1[10.1.0.4]
+2026-10-18T09:05:00.100000+00:00 relay-2 postfix/qmgr[201]: 1A2B3C4D5E: from=<hello@acme.test>, size=650, nrcpt=1 (queue active)
+2026-10-18T09:05:00.900000+00:00 relay-2 postfix/smtp[202]: 1A2B3C4D5E: to=<hal@outlook.example>, relay=outlook-com.olc.protection.outlook.com[52.101.68.4]:25, delay=0.8, delays=0.1/0/0.3/0.4, dsn=2.6.0, status=sent (250 2.6.0 Queued mail for delivery)
+2026-10-18T09:05:00.910000+00:00 relay-2 postfix/qmgr[201]: 1A2B3C4D5E: removed
+2026-10-18T09:06:00.000000+00:00 relay-1 postfix/pickup[118]: 7A8B9C0D1E: uid=33 from=<www-data>
+2026-10-18T09:06:00.050000+00:00 relay-1 postfix/cleanup[101]: 7A8B9C0D1E: message-id=<20261018090600.7A8B9C0D1E@relay-1.example>
+2026-10-18T09:06:00.100000+00:00 relay-1 postfix/qmgr[90]: 7A8B9C0D1E: from=<www-data@relay-1.example>, size=900, nrcpt=1 (queue active)
+2026-10-18T09:06:00.600000+00:00 relay-1 postfix/smtp[119]: 7A8B9C0D1E: to=<ops@fabrikam.example>, relay=mx.fabrikam.example[198.51.100.25]:25, delay=0.5, delays=0.1/0/0.2/0.2, dsn=2.0.0, status=sent (250 2.0.0 Ok: queued as 1F2E)
+2026-10-18T09:06:00.610000+00:00 relay-1 postfix/qmgr[90]: 7A8B9C0D1E: removed
+2026-10-18T09:07:00.000000+00:00 relay-1 postfix/smtpd[100]: 8B9C0D1E2F: client=app-1[10.1.0.4]
+2026-10-18T09:07:00.300000+00:00 relay-1 postfix/cleanup[101]: 8B9C0D1E2F: milter-reject: END-OF-MESSAGE from app-1[10.1.0.4]: 5.7.1 Message rejected by policy; from=<hello@acme.test> to=<ivy@gmail.example> proto=ESMTP helo=<app-1>
+2026-10-18T09:08:00.000000+00:00 relay-1 postfix/smtpd[100]: 9C0D1E2F3A: client=app-1[10.1.0.4]
+2026-10-18T09:08:00.100000+00:00 relay-1 postfix/qmgr[90]: 9C0D1E2F3A: from=<hello@acme.test>, size=820, nrcpt=1 (queue active)
+2026-10-18T09:08:30.100000+00:00 relay-1 postfix/smtp[120]: 9C0D1E2F3A: to=<jo@tailspin.example>, relay=none, delay=30, delays=0.1/0/30/0, dsn=4.4.1, status=deferred (connect to mail.tailspin.example[203.0.113.40]:25: Connection timed out)
+2026-10-18T09:20:00.000000+00:00 relay-1 postfix/postsuper[300]: 9C0D1E2F3A: removed
+2026-10-18T11:00:00.100000+00:00 relay-1 postfix/qmgr[90]: 2B3C4D5E6F: from=<hello@acme.test>, size=500, nrcpt=1 (queue active)
+2026-10-18T11:00:00.700000+00:00 relay-1 postfix/smtp[121]: 2B3C4D5E6F: to=<lee@gmail.example>, relay=gmail-smtp-in.l.google.com[173.194.220.26]:25, delay=0.6, delays=0.1/0/0.2/0.3, dsn=2.0.0, status=sent (250 2.0.0 OK  1792359600 x3 - gsmtp)
+2026-10-18T11:00:00.710000+00:00 relay-1 postfix/qmgr[90]: 2B3C4D5E6F: removed
+2026-10-18T09:09:00.000000+00:00 relay-1 postfix/smtpd[100]: 0A1B2C3D4E: client=app-1[10.1.0.4]
+2026-10-18T09:09:00.100000+00:00 relay-1 postfix/qmgr[90]: 0A1B2C3D4E: from=<hello@acme.test>, size=640, nrcpt=1 (queue active)
+2026-10-18T09:09:00.700000+00:00 relay-1 postfix/smtp[122]: 0A1B2C3D4E: to=<old@example.net>, relay=mx.example.net[198.51.100.7]:25, delay=0.6, delays=0.1/0/0.2/0.3, dsn=5.1.1, status=bounced (host mx.example.net[198.51.100.7] said: 550 5.1.1 <old@example.net>: Recipient address rejected: User unknown (in reply to RCPT TO command))
+2026-10-18T09:09:00.710000+00:00 relay-1 postfix/qmgr[90]: 0A1B2C3D4E: removed
+2026-10-18T09:09:00.715000+00:00 relay-1 postfix/bounce[107]: 0A1B2C3D4E: sender non-delivery notification: 0B1C2D3E4F

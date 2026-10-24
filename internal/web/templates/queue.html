@@ -1,0 +1,56 @@
+{{define "content"}}{{with .Data}}
+<section class="panel flush">
+  <div class="panel-head"><h2>In the queue now</h2><span class="sub">messages Postfix still holds, oldest first (it gives up after {{dur .Lifetime}})</span></div>
+  {{if .Queued}}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Waiting</th><th>Server</th><th>Queue ID</th><th>From</th><th class="num">Pending</th><th class="num">Attempts</th><th class="response">Last response</th></tr></thead>
+    <tbody>
+    {{range .Queued}}
+    <tr>
+      <td class="nowrap" title="{{when .ReceivedAt}}">{{ago .ReceivedAt}}</td>
+      <td class="nowrap">{{.Server}}</td>
+      <td><a class="mono" href="/messages/{{.ID}}">{{.QueueID}}</a></td>
+      <td class="clip">{{sender .Sender .SenderKnown}}</td>
+      <td class="num">{{.Pending}}</td>
+      <td class="num">{{.Attempts}}</td>
+      <td class="response">{{with .DSN}}<code>{{.}}</code> {{end}}{{.Response}}</td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="empty">The queue is empty.</p>
+  {{end}}
+</section>
+
+<section class="panel flush">
+  <div class="panel-head"><h2>Why mail was deferred</h2><span class="sub">by provider and status code, with the latest response</span></div>
+  {{if .Reasons}}
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Provider</th><th>Code</th><th class="num">Deferrals</th><th>Last</th><th class="response">Latest response</th></tr></thead>
+    <tbody>
+    {{range .Reasons}}
+    <tr>
+      <td class="nowrap"><a href="{{$.Link "/messages" "q" (printf "provider:%s dsn:%s" .Provider .DSN)}}">{{provider .Provider}}</a></td>
+      <td><code>{{or .DSN "–"}}</code></td>
+      <td class="num">{{num .Count}}</td>
+      <td class="nowrap">{{ago .Last}}</td>
+      <td class="response">{{.Example}}</td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="empty">No deferrals in this period.</p>
+  {{end}}
+</section>
+
+<section class="panel flush">
+  <div class="panel-head"><h2>Failures</h2><span class="sub">latest 50 deferrals, bounces, expiries and rejections</span></div>
+  {{template "failures" .Failures}}
+</section>
+{{end}}{{end}}

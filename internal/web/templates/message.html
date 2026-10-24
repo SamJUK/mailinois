@@ -1,0 +1,97 @@
+{{define "content"}}{{with .Data}}
+<p class="crumbs"><a href="{{$.Link "/messages"}}">Messages</a> › <span class="mono">{{or .QueueID "NOQUEUE"}}</span></p>
+<header class="msghead">
+  <div>
+    <h1>{{or .Subject "(no subject logged)"}}</h1>
+    <p>{{template "badge" .Status}} {{.Summary}}</p>
+  </div>
+  <div class="actions">
+    {{if .QueueID}}<button type="button" class="btn" data-copy="{{.QueueID}}">Copy queue ID</button>{{end}}
+    {{if and .Capture .Capture.Body}}<a class="btn primary" href="/messages/{{.ID}}/eml" download>Download .eml</a>{{end}}
+  </div>
+</header>
+
+<section class="panel" aria-label="Details">
+  <dl class="facts">
+    <div><dt>From</dt><dd>{{sender .Sender .SenderKnown}}</dd></div>
+    <div><dt>Handed over by</dt><dd>{{or .ClientHost "–"}}{{with .ClientIP}} [{{.}}]{{end}}{{with .SASLUser}}, signed in as {{.}}{{end}}</dd></div>
+    <div><dt>Server</dt><dd>{{.Server}}</dd></div>
+    <div><dt>Received</dt><dd>{{when .ReceivedAt}}</dd></div>
+    <div><dt>Left the queue</dt><dd>{{if .RemovedAt}}{{whenp .RemovedAt}}{{else}}still queued{{end}}</dd></div>
+    <div><dt>Queue ID</dt><dd class="mono">{{or .QueueID "none: refused before queueing"}}</dd></div>
+    <div><dt>Message-ID</dt><dd class="mono wrap">{{or .MessageID "–"}}</dd></div>
+    <div><dt>Size</dt><dd>{{if .Size}}{{bytes .Size}}{{else}}–{{end}}{{with .Parsed.Attachments}} · {{len .}} attachment{{if gt (len .) 1}}s{{end}}{{end}}</dd></div>
+    <div><dt>Authentication</dt><dd class="pills">
+      {{range .DKIM}}<span class="badge s-{{if eq .Status "pass"}}sent{{else if eq .Status "fail"}}bounced{{else}}queued{{end}}" title="{{.Reason}}">DKIM {{.Status}}{{with .Selector}} · {{.}}{{end}}</span>{{end}}
+      {{range .SenderDNS}}<span class="badge s-{{severity .Status}}" title="{{.Summary}}">{{.Kind}} {{.Status}}</span>{{end}}
+      {{if not (or .DKIM .SenderDNS)}}–{{end}}
+    </dd></div>
+  </dl>
+</section>
+
+{{if .Recipients}}
+<section class="cards" aria-label="Recipients">
+  {{range .Recipients}}
+  <div class="panel rcpt">
+    <div class="rcpt-head"><strong>{{.Address}}</strong>{{template "badge" .Status}}</div>
+    <span class="sub">{{provider .Provider}} · {{.Attempts}} attempt{{if ne .Attempts 1}}s{{end}}{{if .Delay}} · took {{secs .Delay}}{{end}}{{with .OrigTo}} · for {{.}}{{end}}</span>
+    {{if .Relay}}<span class="sub mono">{{.Relay}}{{with .RelayIP}} [{{.}}]{{end}}</span>{{end}}
+    {{if .Response}}<code class="raw">{{with .DSN}}{{.}} {{end}}{{.Response}}</code>{{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+<section class="panel" aria-label="Message">
+  <div class="tabs-inline" role="tablist">
+    <a role="tab" href="?tab=timeline"{{if eq .Tab "timeline"}} aria-selected="true"{{end}}>Timeline</a>
+    <a role="tab" href="?tab=headers"{{if eq .Tab "headers"}} aria-selected="true"{{end}}>Headers</a>
+    <a role="tab" href="?tab=body"{{if eq .Tab "body"}} aria-selected="true"{{end}}>Body</a>
+    <a role="tab" href="?tab=log"{{if eq .Tab "log"}} aria-selected="true"{{end}}>Log lines</a>
+  </div>
+
+  {{if eq .Tab "timeline"}}
+  <ol class="timeline">
+  {{range .Events}}
+    <li class="k-{{.Kind}}{{with .Status}} s-{{.}}{{end}}">
+      <span class="when mono">{{when .At}}</span>
+      <div><strong>{{.Kind}}</strong>{{with .Status}} {{template "badge" .}}{{end}}{{with .DSN}} <code>{{.}}</code>{{end}}{{with .Recipient}} <span class="sub">{{.}}</span>{{end}}<code class="line">{{.Program}}: {{.Raw}}</code></div>
+    </li>
+  {{end}}
+  </ol>
+  {{else if eq .Tab "headers"}}
+    {{if .Capture}}
+    <dl class="headers">
+      {{range .Parsed.Headers}}<dt class="mono">{{.Name}}</dt><dd class="mono">{{.Value}}</dd>{{end}}
+    </dl>
+    {{if .Capture.Truncated}}<p class="sub">This capture was cut at the size limit.</p>{{end}}
+    {{else}}
+    <p class="empty">Not captured. Turn on capture (headers or full) to see headers here.</p>
+    {{end}}
+  {{else if eq .Tab "body"}}
+    {{if and .Capture .Capture.Body}}
+    <div class="body-split">
+      <div class="bodytext">
+        {{if .Parsed.Text}}<pre>{{.Parsed.Text}}</pre>{{else}}<p class="empty">No plain-text part.</p>{{end}}
+        {{if .Parsed.HTML}}
+        <h3>HTML part</h3>
+        <iframe class="htmlpreview" sandbox="" src="/messages/{{.ID}}/html" referrerpolicy="no-referrer" title="HTML part, with scripts and remote content blocked"></iframe>
+        {{end}}
+      </div>
+      <div class="parts">
+        <h3>Attachments</h3>
+        {{range .Parsed.Attachments}}<p class="mono">{{or .Name "(unnamed)"}} · {{.Type}} · {{bytes .Size}}</p>{{else}}<p class="sub">None.</p>{{end}}
+        {{if .Capture.Truncated}}<p class="sub">Cut at the size limit: only part of the message was kept.</p>{{end}}
+      </div>
+    </div>
+    {{else if .Capture}}
+    <p class="empty">Only the headers were captured (capture mode headers).</p>
+    {{else}}
+    <p class="empty">Not captured. Set capture mode to full to keep bodies.</p>
+    {{end}}
+  {{else}}
+  <pre class="log">{{range .Events}}{{when .At}} {{.Program}}: {{.Raw}}
+{{end}}</pre>
+  {{end}}
+</section>
+{{end}}{{end}}

@@ -1,0 +1,14 @@
+#!/bin/sh
+# Installed by `make hooks`. Skip once with `git commit --no-verify`.
+set -e
+
+go_files=$(git diff --cached --name-only --diff-filter=ACM -- '*.go')
+[ -z "$go_files" ] && exit 0
+
+unformatted=$(echo "$go_files" | xargs gofmt -l)
+if [ -n "$unformatted" ]; then
+	echo "gofmt needed:" >&2
+	echo "$unformatted" >&2
+	exit 1
+fi
+go vet ./...

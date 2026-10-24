@@ -1,0 +1,37 @@
+{{define "content"}}
+<p class="lede">Each provider's attempts in this period, against the period of the same length before it.</p>
+<div class="providers">
+{{range .Data}}
+{{$finals := add .Sent .Failed}}{{$prevFinals := add .PrevSent .PrevFailed}}
+<section class="panel">
+  <div class="panel-head">
+    <h2><a href="{{$.Link "/messages" "q" (printf "provider:%s" .Provider)}}">{{provider .Provider}}</a></h2>
+    <span class="sub">{{num .Attempts}} attempts</span>
+  </div>
+  <div class="rates">
+    {{$sent := change (rate .Sent $finals) (rate .PrevSent $prevFinals) false}}
+    <div><span class="label">Delivered</span><strong>{{pct (rate .Sent $finals)}}</strong>{{with $sent.Text}}<em class="{{$sent.Class}}" title="against the previous period">{{.}}</em>{{end}}</div>
+    {{$deferred := change (rate .Deferred .Attempts) (rate .PrevDeferred .PrevAttempts) true}}
+    <div><span class="label">Deferred</span><strong>{{pct (rate .Deferred .Attempts)}}</strong>{{with $deferred.Text}}<em class="{{$deferred.Class}}" title="against the previous period">{{.}}</em>{{end}}</div>
+    {{$failed := change (rate .Failed $finals) (rate .PrevFailed $prevFinals) true}}
+    <div><span class="label">Bounced</span><strong>{{pct (rate .Failed $finals)}}</strong>{{with $failed.Text}}<em class="{{$failed.Class}}" title="against the previous period">{{.}}</em>{{end}}</div>
+  </div>
+  {{if .Responses}}
+  <h3>Most common failures</h3>
+  <ul class="responses">
+  {{range .Responses}}
+    <li>
+      <div>{{template "badge" .Status}} <code>{{or .DSN "–"}}</code> <span class="sub">× {{num .Count}}</span></div>
+      <div class="response">{{.Example}}</div>
+    </li>
+  {{end}}
+  </ul>
+  {{else if .Attempts}}
+  <p class="empty">Every attempt succeeded.</p>
+  {{else}}
+  <p class="empty">No mail to {{provider .Provider}} in this period.</p>
+  {{end}}
+</section>
+{{end}}
+</div>
+{{end}}

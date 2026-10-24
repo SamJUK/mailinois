@@ -1,0 +1,57 @@
+name: release
+
+# A published release builds the image for amd64 and arm64 and pushes it to GHCR as ghcr.io/samjuk/mailinois:<tag>
+# (and :latest unless it's a prerelease; deploys pin the digest this prints), and attaches static binaries and their
+# SHA256SUMS to the release.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: build and push
+        env:
+          TAG: ${{ github.event.release.tag_name || github.sha }}
+          LATEST: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          image=ghcr.io/samjuk/mailinois
+          tags=(-t "$image:$TAG")
+          if [ "$LATEST" = true ]; then tags+=(-t "$image:latest"); fi
+          # amd64 and arm64 under one tag, with an SBOM and build provenance attached.
+          docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION="$TAG" \
+            --sbom=true --provenance=mode=max --metadata-file meta.json --push "${tags[@]}" .
+          echo "Pushed $image:$TAG@$(jq -r '."containerimage.digest"' meta.json)" | tee -a "$GITHUB_STEP_SUMMARY"
+
+  binaries:
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: build and attach
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir dist
+          # Pure Go (SQLite included), so every target cross-compiles with CGO off.
+          for target in linux/amd64 linux/arm64 darwin/arm64; do
+            GOOS=${target%/*} GOARCH=${target#*/} CGO_ENABLED=0 \
+              go build -trimpath -ldflags "-s -w -X main.version=${TAG}" -o "dist/mailinois-${target%/*}-${target#*/}" ./cmd/mailinois
+          done
+          (cd dist && sha256sum mailinois-* > SHA256SUMS && cat SHA256SUMS)
+          gh release upload "$TAG" dist/* --clobber

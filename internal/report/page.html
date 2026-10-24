@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="{{.CSP}}">
+<title>Mailinois report</title>
+<style>{{.CSS}}</style>
+</head>
+<body>
+<header class="top">
+  <strong class="brand">Mailinois report</strong>
+  <span id="period" class="muted"></span>
+  <span class="spacer"></span>
+  <button id="print" type="button">Print or save as PDF</button>
+  <button id="theme" type="button" aria-label="Switch between dark and light">Theme</button>
+</header>
+<main id="app"><noscript><p class="empty">This report draws itself with JavaScript. Open it in a browser with scripts on, or ask for the Markdown version (<code>-o report.md</code>).</p></noscript></main>
+<script type="application/json" id="data">{{.Data}}</script>
+<script>{{.JS}}</script>
+</body>
+</html>

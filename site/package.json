@@ -1,0 +1,27 @@
+{
+	"name": "mailinois-site",
+	"type": "module",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "astro dev",
+		"start": "astro dev",
+		"build": "astro build",
+		"test": "node --experimental-strip-types --test src/demo/*.test.ts",
+		"preview": "astro preview",
+		"astro": "astro"
+	},
+	"engines": {
+		"node": ">=22.12.0"
+	},
+	"dependencies": {
+		"@astrojs/starlight": "0.42.6",
+		"@fontsource-variable/geist": "5.3.0",
+		"@fontsource-variable/geist-mono": "5.3.0",
+		"astro": "7.3.8",
+		"sharp": "0.35.5"
+	},
+	"overrides": {
+		"postcss-selector-parser": "^7.1.6"
+	}
+}

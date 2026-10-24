@@ -1,0 +1,10 @@
+# The local preview's config (compose.yaml). Demo mode makes up traffic; the rest is real.
+listen:
+  http: ":7480"
+  syslog: ":5514"
+  milter: ":8892"
+database:
+  url: "sqlite:/data/mailinois.db"
+capture:
+  mode: full
+demo: true

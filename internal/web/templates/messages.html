@@ -1,0 +1,55 @@
+{{define "content"}}{{with .Data}}
+<div class="toolbar">
+  <div class="chips">
+    <a href="{{$.Link "/messages" "q" ""}}"{{if not $.Q}} aria-current="true"{{end}}>All</a>
+    {{range .Statuses}}<a href="{{$.Link "/messages" "q" (printf "status:%s" .)}}"{{if eq $.Q (printf "status:%s" .)}} aria-current="true"{{end}}>{{.}}</a>{{end}}
+  </div>
+  <details class="help">
+    <summary>Search tips</summary>
+    <div>
+      <p>Words match addresses, subjects, queue IDs and Message-IDs. Fields narrow it down; a leading <code>-</code> leaves things out.</p>
+      <dl>
+        <dt><code>from:store-a.example</code> <code>to:gmail.com</code> <code>domain:</code></dt><dd>sender, recipient, or either; an address or a domain</dd>
+        <dt><code>status:deferred,bounced</code></dt><dd>queued, deferred, sent, bounced, expired, deleted, cancelled, rejected</dd>
+        <dt><code>provider:microsoft</code></dt><dd>google, microsoft, yahoo, apple, other</dd>
+        <dt><code>dsn:4.7</code></dt><dd>any attempt whose status code starts with this</dd>
+        <dt><code>server:</code> <code>site:</code> <code>client:</code> <code>relay:</code></dt><dd>where it came from and went</dd>
+        <dt><code>qid:</code> <code>msgid:</code> <code>subject:"order confirmed"</code></dt><dd>exact IDs; quote values with spaces</dd>
+        <dt><code>has:capture</code> <code>after:2d</code> <code>before:2026-10-18</code></dt><dd>captured messages; a period that overrides the picker</dd>
+      </dl>
+    </div>
+  </details>
+</div>
+
+<section class="panel flush">
+{{if .Rows}}
+<div class="scroll">
+<table class="rows">
+  <thead><tr><th>Received</th><th>Server</th><th>From</th><th>To</th><th>Subject</th><th>Status</th><th class="num">Size</th><th>Queue ID</th></tr></thead>
+  <tbody>
+  {{range .Rows}}
+  <tr>
+    <td class="nowrap"><a href="/messages/{{.ID}}">{{when .ReceivedAt}}</a></td>
+    <td class="nowrap">{{.Server}}</td>
+    <td class="clip">{{sender .Sender .SenderKnown}}</td>
+    <td class="clip">{{.Recipient}}{{if gt .Recipients 1}} <span class="more">+{{add .Recipients -1}}</span>{{end}}</td>
+    <td class="clip subject">{{.Subject}}</td>
+    <td>{{template "badge" .Status}}</td>
+    <td class="num nowrap">{{if .Size}}{{bytes .Size}}{{end}}</td>
+    <td><a class="mono" href="/messages/{{.ID}}">{{or .QueueID "NOQUEUE"}}</a></td>
+  </tr>
+  {{end}}
+  </tbody>
+</table>
+</div>
+{{else}}
+<p class="empty">No messages match in this period.{{if $.Q}} Try a longer period, or fewer search terms.{{end}}</p>
+{{end}}
+</section>
+{{if or .Prev .Next}}
+<nav class="pager">
+  {{if .Prev}}<a href="{{.Prev}}">← Newer</a>{{else}}<span></span>{{end}}
+  {{if .Next}}<a href="{{.Next}}">Older →</a>{{end}}
+</nav>
+{{end}}
+{{end}}{{end}}
