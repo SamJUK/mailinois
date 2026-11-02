@@ -535,6 +535,11 @@ func TestHeaderSaysWhetherItFollows(t *testing.T) {
 }
 
 func TestAutoQueueWaitsForAServerName(t *testing.T) {
+	bin := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bin, "postqueue"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin)
 	r, w, _ := os.Pipe()
 	defer r.Close()
 	defer w.Close()
