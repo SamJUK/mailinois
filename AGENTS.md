@@ -7,11 +7,13 @@ tenant, not a multi-tenant rewrite.
 
 ## Layout
 
-- `cmd/mailinois`: every command (`serve`, `agent`, `import`, `report`, `check`, `token`, `hash-password`, `healthcheck`).
-  `internal/report` builds the one-off report (HTML with inline script and CSP hashes, Markdown, JSON).
+- `cmd/mailinois`: every command (`serve`, `agent`, `import`, `report`, `inspect`, `check`, `token`, `hash-password`, `healthcheck`).
+  `internal/report` builds the one-off report (HTML with inline script and CSP hashes, Markdown, JSON);
+  `internal/tui` is `inspect` (Bubble Tea: log paths and rotation sets, loader, `postqueue -j`, screens).
 - `internal/postfix` parses lines into events; `internal/syslog` reads every log format; `internal/ingest`
   batches them; `internal/store` correlates and stores (migrations in `store/schema/`); `internal/web` is the
-  dashboard and API; `capture` is the milter; `agent`, `alerts`, `dnscheck`, `dnsbl`, `auth`, `config`, `demo`.
+  dashboard and API; `capture` is the milter; `follow` tails a log file through rotation (for `agent` and
+  `inspect`); `agent`, `alerts`, `dnscheck`, `dnsbl`, `auth`, `config`, `demo`.
 - `deploy/`: the example config, and rsyslog, Compose, systemd and Kubernetes files people copy.
 - `site/`: docs (`src/content/docs/docs/`) and marketing pages (`src/pages/index.astro`, `use-cases/`,
   `setups/`), Astro Starlight. Local only for now: `make site`.

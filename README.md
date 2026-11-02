@@ -68,6 +68,19 @@ journalctl SYSLOG_FACILITY=2 --since today -o short --no-pager | mailinois repor
 HTML (interactive, offline, prints to PDF), Markdown or JSON, with the summary, why mail waited, what was still
 queued and every message's story. See [One-off reports](site/src/content/docs/docs/report.md).
 
+## Inspecting a node
+
+An interactive terminal view of one server's logs, over SSH: the overview, every message's story, Postfix's
+live queue (`postqueue -j`) and new deliveries as they arrive. Read-only, and the throwaway database goes when you quit.
+
+```sh
+mailinois inspect                         # /var/log/mail.log and its rotated copies, following
+mailinois inspect /srv/copied-logs/       # a directory: its mail.log or maillog rotation set, oldest first
+journalctl -f -n all SYSLOG_FACILITY=2 -o short | mailinois inspect -
+```
+
+See [Inspecting a node](site/src/content/docs/docs/inspect.md).
+
 ## Running it
 
 | How | |

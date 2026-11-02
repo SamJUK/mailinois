@@ -66,6 +66,7 @@ For a one-off look there's nothing to run: `mailinois report /var/log/mail.log` 
 | Loki, Graylog, Elastic | Lines, by query | Yes | Yes, on queries | A log platform |
 | Mailinois | Yes | Yes | Webhooks | One binary or container |
 | `mailinois report` | Yes | If you pass each server's log | No | A command, then a file |
+| `mailinois inspect` | Yes | If you pass each server's log | No | A terminal view on the server, over SSH |
 
 ## Can I use more than one?
 

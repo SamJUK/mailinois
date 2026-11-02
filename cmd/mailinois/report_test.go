@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -28,5 +29,16 @@ func TestReadLogPlainAndGzip(t *testing.T) {
 	}
 	if _, _, err := readLog(filepath.Join(dir, "missing.log"), time.UTC); err == nil {
 		t.Error("a missing file read without error")
+	}
+}
+
+func TestInspectNeedsATerminal(t *testing.T) {
+	// go test's stdout isn't a terminal. The positive control, a real terminal, is run by hand in tmux.
+	err := runInspect(t.Context(), []string{t.TempDir()})
+	if err == nil || !strings.Contains(err.Error(), "needs a terminal") {
+		t.Errorf("inspect with stdout to a pipe: %v; want the needs-a-terminal error", err)
+	}
+	if err := runInspect(t.Context(), []string{"-queue", "sometimes"}); err == nil || !strings.Contains(err.Error(), "-queue") {
+		t.Errorf("-queue sometimes: %v; want it refused", err)
 	}
 }
