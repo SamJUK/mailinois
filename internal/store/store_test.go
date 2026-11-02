@@ -232,6 +232,27 @@ func TestPickupAndPostsuper(t *testing.T) {
 	})
 }
 
+// A period that isn't a whole number of steps keeps its last part-step: the 11:00 delivery is in the chart.
+// One that ends before it starts has no chart rather than a panic.
+func TestDashboardPartBucket(t *testing.T) {
+	each(t, func(t *testing.T, st *store.Store) {
+		day := time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)
+		f := store.Filter{Since: day, Until: day.Add(11*time.Hour + time.Second)}
+		d, err := st.Dashboard(ctx, f, time.Hour, forever)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(d.Buckets) != 12 || d.Buckets[11].Sent == 0 {
+			t.Errorf("%d buckets, %+v last; want 12, the 11:00 delivery in the last", len(d.Buckets), d.Buckets[len(d.Buckets)-1])
+		}
+
+		d, err = st.Dashboard(ctx, store.Filter{Since: day, Until: day.Add(-3 * time.Hour)}, time.Hour, forever)
+		if err != nil || len(d.Buckets) != 0 {
+			t.Errorf("a period ending before it starts: %d buckets, %v", len(d.Buckets), err)
+		}
+	})
+}
+
 func TestDashboard(t *testing.T) {
 	each(t, func(t *testing.T, st *store.Store) {
 		d, err := st.Dashboard(ctx, all, 24*time.Hour, forever)
