@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/SamJUK/mailinois/internal/capture"
+	"github.com/SamJUK/mailinois/internal/follow"
 	"github.com/SamJUK/mailinois/internal/syslog"
 )
 
@@ -171,6 +172,23 @@ func (a *Agent) frame(s string) {
 		a.Lines.Add(1)
 	default:
 		a.LinesDropped.Add(1)
+	}
+}
+
+// follow ships the lines appended to path from now on. The history is `mailinois import`'s job.
+func (a *Agent) follow(ctx context.Context, path string) {
+	t := follow.Open(path, true)
+	defer t.Close()
+	emit := func(s string) bool { return a.fileLine(ctx, s) }
+	tick := time.NewTicker(a.poll)
+	defer tick.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+			t.Poll(emit)
+		}
 	}
 }
 

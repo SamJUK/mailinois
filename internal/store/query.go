@@ -142,7 +142,9 @@ func (s *Store) buckets(ctx context.Context, f Filter, step time.Duration) ([]Bu
 		return nil, err
 	}
 	defer rows.Close()
-	n := int(f.Until.Sub(f.Since) / step)
+	// A period that isn't whole steps ends in a part-bucket; one that ends before it starts (a before: earlier
+	// than the log) has none.
+	n := max(int((f.Until.Sub(f.Since)+step-1)/step), 0)
 	out := make([]Bucket, n)
 	for i := range out {
 		out[i].At = f.Since.Add(time.Duration(i) * step)

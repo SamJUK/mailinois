@@ -24,7 +24,7 @@ export default defineConfig({
 				'./src/styles/theme.css',
 			],
 			sidebar: [
-				{ label: 'Start here', items: ['docs/introduction', 'docs/browser-demo', 'docs/quick-start', 'docs/report', 'docs/install'] },
+				{ label: 'Start here', items: ['docs/introduction', 'docs/browser-demo', 'docs/quick-start', 'docs/report', 'docs/inspect', 'docs/install'] },
 				{
 					label: 'Set up',
 					items: [

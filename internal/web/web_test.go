@@ -89,7 +89,7 @@ func noRedirects() *http.Client {
 
 func (f fixture) messageID(t *testing.T, queueID string) string {
 	t.Helper()
-	rows, err := f.st.Messages(context.Background(), store.Filter{Since: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC), Until: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC),
+	rows, err := f.st.Messages(context.Background(), store.Filter{Since: time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC), Until: time.Now().Add(time.Hour),
 		Terms: []store.Term{{Field: "qid", Value: queueID}}}, 0, 1)
 	if err != nil || len(rows) == 0 {
 		t.Fatalf("%s: %v", queueID, err)

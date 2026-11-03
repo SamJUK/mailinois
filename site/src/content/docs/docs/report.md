@@ -6,6 +6,7 @@ description: Turn existing Postfix logs into one report file (interactive HTML, 
 `mailinois report` reads mail logs you already have and writes one file: the summary, why mail waited or failed, what was still queued, and each message's story with its log lines. It needs no config, no server and no database: it builds a throwaway one, writes the report, and deletes it.
 
 It's for the question that arrives after the fact: a customer says the password reset never came this morning.
+To look around a server yourself instead, interactively, there's [`mailinois inspect`](../inspect/).
 
 ```sh
 mailinois report -q "to:customer@example.com" /var/log/mail.log

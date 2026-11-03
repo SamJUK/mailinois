@@ -44,6 +44,7 @@ Usage:
   mailinois serve [-config mailinois.yaml]      ingest syslog, capture, check, alert and serve the dashboard (the default)
   mailinois import [-config ...] [file...]      read mail logs from files or stdin (-), then exit
   mailinois report [-q search] [-o file] [file...]  one report file (HTML, Markdown or JSON) from mail logs, no server
+  mailinois inspect [-q search] [path...]      an interactive terminal view of a node's mail logs, no server
   mailinois agent -server URL -token TOKEN ...  ship a mail server's logs and captures to a Mailinois server
   mailinois hash-password                        read a password on stdin, print its hash for auth.users
   mailinois token                                print a new API token and the hash for auth.tokens
@@ -71,6 +72,8 @@ func main() {
 		err = importLogs(ctx, args)
 	case "report":
 		err = runReport(ctx, args)
+	case "inspect":
+		err = runInspect(ctx, args)
 	case "agent":
 		err = runAgent(ctx, args)
 	case "hash-password":

@@ -1,8 +1,9 @@
-package agent
+// Package follow reads lines appended to a log file, through renames (logrotate's create) and in-place
+// truncation (copytruncate).
+package follow
 
 import (
 	"bytes"
-	"context"
 	"log/slog"
 	"os"
 	"strings"
@@ -16,24 +17,8 @@ const (
 	keepRotated = 30 * time.Second
 )
 
-// follow ships the lines appended to path from now on, through renames and in-place truncation.
-func (a *Agent) follow(ctx context.Context, path string) {
-	t := &tail{path: path, emit: func(s string) bool { return a.fileLine(ctx, s) }}
-	t.open(true)
-	defer t.close()
-	tick := time.NewTicker(a.poll)
-	defer tick.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-tick.C:
-			t.poll()
-		}
-	}
-}
-
-type tail struct {
+// Tail is one followed file. Poll hands on what was appended since the last Poll.
+type Tail struct {
 	path     string
 	emit     func(string) bool // false: stop reading
 	cur      *logFile
@@ -48,9 +33,15 @@ type logFile struct {
 	buf    []byte
 }
 
-// open opens path, at its end when the agent is starting (the history is `mailinois import`'s job), and at
-// its start when the file appeared later, since all of it is new.
-func (t *tail) open(atEnd bool) {
+// Open starts following path: from its end when atEnd (only lines written from now on), otherwise from its
+// start. A path that doesn't exist yet is retried on every Poll, and read from its start once it appears.
+func Open(path string, atEnd bool) *Tail {
+	t := &Tail{path: path}
+	t.open(atEnd)
+	return t
+}
+
+func (t *Tail) open(atEnd bool) {
 	f, err := os.Open(t.path)
 	if err != nil {
 		if msg := err.Error(); msg != t.warned {
@@ -66,7 +57,13 @@ func (t *tail) open(atEnd bool) {
 	}
 }
 
-func (t *tail) poll() {
+// Poll hands each new complete line to emit, until emit reports false.
+func (t *Tail) Poll(emit func(string) bool) {
+	t.emit = emit
+	t.poll()
+}
+
+func (t *Tail) poll() {
 	if t.old != nil {
 		t.old.read(t.emit)
 		if time.Now().After(t.oldUntil) {
@@ -89,7 +86,7 @@ func (t *tail) poll() {
 	t.cur.read(t.emit)
 }
 
-func (t *tail) close() {
+func (t *Tail) Close() {
 	for _, l := range []*logFile{t.old, t.cur} {
 		if l != nil {
 			l.f.Close()
