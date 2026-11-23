@@ -11,8 +11,8 @@ require (
 	github.com/charmbracelet/x/ansi v0.11.9
 	github.com/charmbracelet/x/term v0.2.2
 	github.com/coreos/go-oidc/v3 v3.21.0
-	github.com/emersion/go-message v0.18.1
-	github.com/emersion/go-milter v0.4.1
+	github.com/emersion/go-message v0.18.2
+	github.com/emersion/go-milter v0.5.0
 	github.com/emersion/go-msgauth v0.7.0
 	github.com/jackc/pgx/v5 v5.11.0
 	go.yaml.in/yaml/v3 v3.0.5
