@@ -128,7 +128,7 @@ func TestPages(t *testing.T) {
 		}
 	}
 	// The site picker narrows: relay-2's message is outside the acme site's domains only when it isn't from acme.test.
-	code, body, _ := get(t, c, f.srv.URL+"/messages?period=30d&site=local")
+	code, body, _ := get(t, c, f.srv.URL+"/messages?period=30d&site=local&q=after:2026-10-01")
 	if code != 200 || !strings.Contains(body, "7A8B9C0D1E") || strings.Contains(body, "4D5E6F7081") {
 		t.Errorf("site=local: %d, want the www-data pickup and not acme.test's messages", code)
 	}
@@ -213,7 +213,7 @@ func TestPasswordLoginAndSiteRestriction(t *testing.T) {
 	jar.SetCookies(u, res.Cookies())
 	ann := &http.Client{Jar: jar}
 
-	if code, body, _ := get(t, ann, f.srv.URL+"/messages?period=30d"); code != 200 || strings.Contains(body, "4D5E6F7081") || !strings.Contains(body, "7A8B9C0D1E") {
+	if code, body, _ := get(t, ann, f.srv.URL+"/messages?period=30d&q=after:2026-10-01"); code != 200 || strings.Contains(body, "4D5E6F7081") || !strings.Contains(body, "7A8B9C0D1E") {
 		t.Errorf("ann (local only): %d; sees acme.test: %v, sees the local pickup: %v", code, strings.Contains(body, "4D5E6F7081"), strings.Contains(body, "7A8B9C0D1E"))
 	}
 	if code, _, _ := get(t, ann, f.srv.URL+"/messages/"+f.messageID(t, "4D5E6F7081")); code != 404 {
@@ -262,7 +262,7 @@ func TestAPI(t *testing.T) {
 	if code, _, _ := get(t, c, f.srv.URL+"/api/v1/summary", bearer(f.ingestToken)...); code != 403 {
 		t.Errorf("ingest token reading: %d, want 403", code)
 	}
-	code, body, _ := get(t, c, f.srv.URL+"/api/v1/messages?period=30d&q=provider:microsoft", bearer(f.readToken)...)
+	code, body, _ := get(t, c, f.srv.URL+"/api/v1/messages?period=30d&q=provider:microsoft+after:2026-10-01", bearer(f.readToken)...)
 	var list struct {
 		Messages []struct {
 			QueueID string `json:"queue_id"`

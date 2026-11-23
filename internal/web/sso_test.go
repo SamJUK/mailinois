@@ -308,7 +308,7 @@ func TestSSOGroupSitesRestrictWhatTheySee(t *testing.T) {
 		if res.StatusCode != 303 {
 			t.Fatalf("%s: sign-in %d", tc.name, res.StatusCode)
 		}
-		code, body, _ := get(t, c, a.url+"/messages?period=30d")
+		code, body, _ := get(t, c, a.url+"/messages?period=30d&q=after:2026-10-01")
 		if code != 200 || !strings.Contains(body, "7A8B9C0D1E") || strings.Contains(body, "4D5E6F7081") != !tc.restricted {
 			t.Errorf("%s: messages %d; sees acme.test: %v, sees the local pickup: %v", tc.name, code, strings.Contains(body, "4D5E6F7081"), strings.Contains(body, "7A8B9C0D1E"))
 		}
